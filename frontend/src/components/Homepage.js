@@ -20,6 +20,7 @@ import ChildCareIcon from '@mui/icons-material/ChildCare';
 import ElderlyIcon from '@mui/icons-material/Elderly';
 import VaccinesIcon from '@mui/icons-material/Vaccines';
 import BookingModal from './Booking';
+import Chatbot from './Chatbot';
 
 function Homepage() {
 	const location = useLocation();
@@ -417,6 +418,7 @@ function Homepage() {
 			</Box>
 
 			<BookingModal open={openBooking} onClose={() => setOpenBooking(false)} />
+			<Chatbot />
 		</Box>
 	);
 }
