@@ -27,6 +27,7 @@ import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { addDays, set, format, isBefore, startOfDay } from 'date-fns';
 import InfoIcon from '@mui/icons-material/Info';
+import { isValidPhoneNumber } from 'libphonenumber-js'; // Ensure this import is present
 
 function BookingModal({ open, onClose }) {
 	const theme = useTheme();
@@ -42,6 +43,8 @@ function BookingModal({ open, onClose }) {
 	});
 	const [error, setError] = useState('');
 	const [success, setSuccess] = useState('');
+	const [emailError, setEmailError] = useState('');
+	const [phoneError, setPhoneError] = useState('');
 
 	const steps = [
 		'Personal Details',
@@ -157,6 +160,41 @@ function BookingModal({ open, onClose }) {
 		}
 	};
 
+	const handleEmailChange = (e) => {
+		const emailValue = e.target.value;
+		setFormData({ ...formData, email: emailValue });
+
+		// Validate email live
+		if (!isValidEmail(emailValue)) {
+			setEmailError(
+				'Please enter a valid email address. Example: user@example.com'
+			);
+		} else {
+			setEmailError('');
+		}
+	};
+
+	const handlePhoneChange = (e) => {
+		const phoneValue = e.target.value;
+		setFormData({ ...formData, phone: phoneValue });
+
+		// Validate phone live
+		if (!isValidPhone(phoneValue)) {
+			setPhoneError('Please enter a valid phone number. Example: +60123456789');
+		} else {
+			setPhoneError('');
+		}
+	};
+
+	const isValidEmail = (email) => {
+		const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+		return emailRegex.test(email);
+	};
+
+	const isValidPhone = (phone) => {
+		return isValidPhoneNumber(phone);
+	};
+
 	const getStepContent = (step) => {
 		switch (step) {
 			case 0:
@@ -176,18 +214,18 @@ function BookingModal({ open, onClose }) {
 							label="Email"
 							type="email"
 							value={formData.email}
-							onChange={(e) =>
-								setFormData({ ...formData, email: e.target.value })
-							}
+							onChange={handleEmailChange} // Use the new handler
+							error={!!emailError} // Show error state
+							helperText={emailError} // Show error message
 							required
 						/>
 						<TextField
 							fullWidth
 							label="Phone Number"
 							value={formData.phone}
-							onChange={(e) =>
-								setFormData({ ...formData, phone: e.target.value })
-							}
+							onChange={handlePhoneChange} // Use the new handler
+							error={!!phoneError} // Show error state
+							helperText={phoneError} // Show error message
 							required
 						/>
 					</Box>
@@ -355,7 +393,13 @@ function BookingModal({ open, onClose }) {
 	const isStepValid = (step) => {
 		switch (step) {
 			case 0:
-				return formData.name && formData.email && formData.phone;
+				return (
+					formData.name &&
+					formData.email &&
+					formData.phone &&
+					!emailError &&
+					!phoneError
+				);
 			case 1:
 				return formData.treatment;
 			case 2:
