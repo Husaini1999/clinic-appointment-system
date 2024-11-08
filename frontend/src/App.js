@@ -12,6 +12,7 @@ import Dashboard from './components/Dashboard';
 import Booking from './components/Booking';
 import Navbar from './components/Navbar';
 import Homepage from './components/Homepage';
+import Signup from './components/Signup';
 
 const theme = createTheme({
 	palette: {
@@ -118,6 +119,7 @@ function App() {
 							</PrivateRoute>
 						}
 					/>
+					<Route path="/signup" element={<Signup />} />
 				</Routes>
 			</Router>
 		</ThemeProvider>

@@ -11,12 +11,16 @@ import {
 } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 
-function Login() {
+function Signup() {
 	const [formData, setFormData] = useState({
+		name: '',
 		email: '',
 		password: '',
+		confirmPassword: '',
 	});
 	const [error, setError] = useState('');
+	const [emailError, setEmailError] = useState('');
+	const [passwordError, setPasswordError] = useState('');
 	const navigate = useNavigate();
 
 	const handleChange = (e) => {
@@ -26,14 +30,41 @@ function Login() {
 		});
 	};
 
+	const validateEmail = (email) => {
+		const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+		return emailRegex.test(email);
+	};
+
 	const handleSubmit = async (e) => {
 		e.preventDefault();
-		if (!formData.email || !formData.password) {
+		setError('');
+		setEmailError('');
+		setPasswordError('');
+
+		if (
+			!formData.name ||
+			!formData.email ||
+			!formData.password ||
+			!formData.confirmPassword
+		) {
 			setError('Please fill in all fields.');
 			return;
 		}
+
+		if (!validateEmail(formData.email)) {
+			setEmailError(
+				'Please enter a valid email address. Example: user@example.com'
+			);
+			return;
+		}
+
+		if (formData.password !== formData.confirmPassword) {
+			setPasswordError('Passwords do not match.');
+			return;
+		}
+
 		try {
-			const response = await fetch('/api/auth/login', {
+			const response = await fetch('/api/auth/signup', {
 				method: 'POST',
 				headers: {
 					'Content-Type': 'application/json',
@@ -44,9 +75,7 @@ function Login() {
 			const data = await response.json();
 
 			if (response.ok) {
-				localStorage.setItem('token', data.token);
-				localStorage.setItem('user', JSON.stringify(data.user));
-				navigate('/dashboard');
+				navigate('/login');
 			} else {
 				setError(data.message);
 			}
@@ -68,14 +97,36 @@ function Login() {
 		>
 			<Paper elevation={3} sx={{ padding: 4 }}>
 				<Typography component="h1" variant="h5" align="center" sx={{ mb: 2 }}>
-					Login
+					Sign Up
 				</Typography>
 				{error && (
 					<Alert severity="error" sx={{ mt: 2 }}>
 						{error}
 					</Alert>
 				)}
+				{emailError && (
+					<Alert severity="error" sx={{ mt: 2 }}>
+						{emailError}
+					</Alert>
+				)}
+				{passwordError && (
+					<Alert severity="error" sx={{ mt: 2 }}>
+						{passwordError}
+					</Alert>
+				)}
 				<Box component="form" onSubmit={handleSubmit} sx={{ mt: 1 }}>
+					<TextField
+						margin="normal"
+						required
+						fullWidth
+						id="name"
+						label="Full Name"
+						name="name"
+						autoComplete="name"
+						autoFocus
+						value={formData.name}
+						onChange={handleChange}
+					/>
 					<TextField
 						margin="normal"
 						required
@@ -84,7 +135,6 @@ function Login() {
 						label="Email Address"
 						name="email"
 						autoComplete="email"
-						autoFocus
 						value={formData.email}
 						onChange={handleChange}
 					/>
@@ -96,8 +146,20 @@ function Login() {
 						label="Password"
 						type="password"
 						id="password"
-						autoComplete="current-password"
+						autoComplete="new-password"
 						value={formData.password}
+						onChange={handleChange}
+					/>
+					<TextField
+						margin="normal"
+						required
+						fullWidth
+						name="confirmPassword"
+						label="Confirm Password"
+						type="password"
+						id="confirmPassword"
+						autoComplete="new-password"
+						value={formData.confirmPassword}
 						onChange={handleChange}
 					/>
 					<Button
@@ -106,12 +168,12 @@ function Login() {
 						variant="contained"
 						sx={{ mt: 3, mb: 2 }}
 					>
-						Sign In
+						Sign Up
 					</Button>
 					<Typography variant="body2" align="center">
-						Don't have an account?{' '}
-						<Link href="/signup" variant="body2">
-							Sign Up
+						Already have an account?{' '}
+						<Link href="/login" variant="body2">
+							Login
 						</Link>
 					</Typography>
 				</Box>
@@ -120,4 +182,4 @@ function Login() {
 	);
 }
 
-export default Login;
+export default Signup;

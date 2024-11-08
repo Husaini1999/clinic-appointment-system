@@ -82,6 +82,7 @@ function Navbar() {
 						>
 							Primer Cherang Clinic
 						</Typography>
+
 						<Box
 							sx={{
 								display: 'flex',
@@ -154,6 +155,20 @@ function Navbar() {
 										}}
 									>
 										Home
+									</Button>
+									<Button
+										color="primary"
+										onClick={() => handleNavigation('/#about')}
+										sx={{
+											fontWeight: 500,
+											px: 3,
+											color: 'text.primary',
+											'&:hover': {
+												backgroundColor: 'rgba(0,0,0,0.05)',
+											},
+										}}
+									>
+										About us
 									</Button>
 									<Button
 										color="primary"

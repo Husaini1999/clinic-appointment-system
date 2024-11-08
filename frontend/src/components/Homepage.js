@@ -21,6 +21,7 @@ import ElderlyIcon from '@mui/icons-material/Elderly';
 import VaccinesIcon from '@mui/icons-material/Vaccines';
 import BookingModal from './Booking';
 import Chatbot from './Chatbot';
+import HealthAndSafetyIcon from '@mui/icons-material/HealthAndSafety';
 
 function Homepage() {
 	const location = useLocation();
@@ -240,6 +241,71 @@ function Homepage() {
 				>
 					<KeyboardArrowDownIcon sx={{ fontSize: 48 }} />
 				</IconButton>
+			</Box>
+
+			{/* About Us Section */}
+			<Box
+				id="about"
+				sx={{
+					py: 12,
+					bgcolor: 'background.default',
+					position: 'relative',
+				}}
+			>
+				<Container maxWidth="lg">
+					<Typography
+						variant="h2"
+						component="h2"
+						gutterBottom
+						align="center"
+						color="primary"
+						sx={{ mb: 6 }}
+					>
+						About Us
+					</Typography>
+					<Box sx={{ mb: 4, textAlign: 'center' }}>
+						<HealthAndSafetyIcon
+							sx={{ fontSize: 60, color: 'secondary.main', mb: 2 }}
+						/>
+						<Typography variant="body1" paragraph sx={{ lineHeight: 1.6 }}>
+							Welcome to Primer Clinic! Our mission is to provide compassionate
+							and high-quality healthcare to our community. We believe in
+							treating our patients with respect and dignity, ensuring that they
+							receive the best possible care.
+						</Typography>
+						<Typography variant="body1" paragraph sx={{ lineHeight: 1.6 }}>
+							Our team of dedicated healthcare professionals is committed to
+							your health and well-being. With years of experience in various
+							medical fields, we are here to support you and your family with
+							all your healthcare needs.
+						</Typography>
+						<Typography variant="body1" paragraph sx={{ lineHeight: 1.6 }}>
+							At Primer Clinic, we offer a wide range of services, including
+							general checkups, dental care, physiotherapy, and more. We strive
+							to create a welcoming environment where you can feel comfortable
+							and cared for.
+						</Typography>
+						<Button
+							variant="text"
+							color="secondary"
+							size="large"
+							sx={{
+								mt: 4,
+								py: 2,
+								px: 4,
+								fontSize: '1rem',
+								fontWeight: 600,
+							}}
+							onClick={() =>
+								document
+									.getElementById('services')
+									.scrollIntoView({ behavior: 'smooth' })
+							}
+						>
+							Explore Our Services
+						</Button>
+					</Box>
+				</Container>
 			</Box>
 
 			{/* Services Section */}
