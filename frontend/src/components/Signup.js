@@ -8,8 +8,12 @@ import {
 	Typography,
 	Alert,
 	Link,
+	InputAdornment,
+	IconButton,
 } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
+import Visibility from '@mui/icons-material/Visibility';
+import VisibilityOff from '@mui/icons-material/VisibilityOff';
 
 function Signup() {
 	const [formData, setFormData] = useState({
@@ -21,6 +25,8 @@ function Signup() {
 	const [error, setError] = useState('');
 	const [emailError, setEmailError] = useState('');
 	const [passwordError, setPasswordError] = useState('');
+	const [showPassword, setShowPassword] = useState(false);
+	const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 	const navigate = useNavigate();
 
 	const handleChange = (e) => {
@@ -144,11 +150,24 @@ function Signup() {
 						fullWidth
 						name="password"
 						label="Password"
-						type="password"
+						type={showPassword ? 'text' : 'password'}
 						id="password"
 						autoComplete="new-password"
 						value={formData.password}
 						onChange={handleChange}
+						InputProps={{
+							endAdornment: (
+								<InputAdornment position="end">
+									<IconButton
+										aria-label="toggle password visibility"
+										onClick={() => setShowPassword(!showPassword)}
+										onMouseDown={(e) => e.preventDefault()}
+									>
+										{showPassword ? <Visibility /> : <VisibilityOff />}
+									</IconButton>
+								</InputAdornment>
+							),
+						}}
 					/>
 					<TextField
 						margin="normal"
@@ -156,11 +175,24 @@ function Signup() {
 						fullWidth
 						name="confirmPassword"
 						label="Confirm Password"
-						type="password"
+						type={showConfirmPassword ? 'text' : 'password'}
 						id="confirmPassword"
 						autoComplete="new-password"
 						value={formData.confirmPassword}
 						onChange={handleChange}
+						InputProps={{
+							endAdornment: (
+								<InputAdornment position="end">
+									<IconButton
+										aria-label="toggle confirm password visibility"
+										onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+										onMouseDown={(e) => e.preventDefault()}
+									>
+										{showConfirmPassword ? <Visibility /> : <VisibilityOff />}
+									</IconButton>
+								</InputAdornment>
+							),
+						}}
 					/>
 					<Button
 						type="submit"

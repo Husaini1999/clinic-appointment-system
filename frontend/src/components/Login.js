@@ -8,8 +8,12 @@ import {
 	Typography,
 	Alert,
 	Link,
+	InputAdornment,
+	IconButton,
 } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
+import Visibility from '@mui/icons-material/Visibility';
+import VisibilityOff from '@mui/icons-material/VisibilityOff';
 
 function Login() {
 	const [formData, setFormData] = useState({
@@ -17,6 +21,7 @@ function Login() {
 		password: '',
 	});
 	const [error, setError] = useState('');
+	const [showPassword, setShowPassword] = useState(false);
 	const navigate = useNavigate();
 
 	const handleChange = (e) => {
@@ -94,11 +99,24 @@ function Login() {
 						fullWidth
 						name="password"
 						label="Password"
-						type="password"
+						type={showPassword ? 'text' : 'password'}
 						id="password"
 						autoComplete="current-password"
 						value={formData.password}
 						onChange={handleChange}
+						InputProps={{
+							endAdornment: (
+								<InputAdornment position="end">
+									<IconButton
+										aria-label="toggle password visibility"
+										onClick={() => setShowPassword(!showPassword)}
+										onMouseDown={(e) => e.preventDefault()}
+									>
+										{showPassword ? <Visibility /> : <VisibilityOff />}
+									</IconButton>
+								</InputAdornment>
+							),
+						}}
 					/>
 					<Button
 						type="submit"
