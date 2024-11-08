@@ -7,9 +7,11 @@ import {
 	Button,
 	Typography,
 	Alert,
+	Snackbar,
 	Link,
 	InputAdornment,
 	IconButton,
+	CircularProgress,
 } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import Visibility from '@mui/icons-material/Visibility';
@@ -21,7 +23,10 @@ function Login() {
 		password: '',
 	});
 	const [error, setError] = useState('');
+	const [successMessage, setSuccessMessage] = useState('');
 	const [showPassword, setShowPassword] = useState(false);
+	const [snackbarOpen, setSnackbarOpen] = useState(false);
+	const [loading, setLoading] = useState(false); // Loading state
 	const navigate = useNavigate();
 
 	const handleChange = (e) => {
@@ -37,6 +42,7 @@ function Login() {
 			setError('Please fill in all fields.');
 			return;
 		}
+		setLoading(true); // Set loading to true
 		try {
 			const response = await fetch('/api/auth/login', {
 				method: 'POST',
@@ -51,13 +57,26 @@ function Login() {
 			if (response.ok) {
 				localStorage.setItem('token', data.token);
 				localStorage.setItem('user', JSON.stringify(data.user));
-				navigate('/dashboard');
+				setSuccessMessage('Login successful! Welcome back.');
+				setSnackbarOpen(true);
+
+				// Delay navigation to allow snackbar to show
+				setTimeout(() => {
+					setLoading(false); // Set loading to false before navigating
+					navigate('/dashboard');
+				}, 3000); // Wait for 3 seconds before navigating
 			} else {
 				setError(data.message);
+				setLoading(false); // Set loading to false on error
 			}
 		} catch (err) {
 			setError('An error occurred. Please try again.');
+			setLoading(false); // Set loading to false on error
 		}
+	};
+
+	const handleSnackbarClose = () => {
+		setSnackbarOpen(false);
 	};
 
 	return (
@@ -92,6 +111,7 @@ function Login() {
 						autoFocus
 						value={formData.email}
 						onChange={handleChange}
+						disabled={loading} // Disable input when loading
 					/>
 					<TextField
 						margin="normal"
@@ -117,14 +137,20 @@ function Login() {
 								</InputAdornment>
 							),
 						}}
+						disabled={loading} // Disable input when loading
 					/>
 					<Button
 						type="submit"
 						fullWidth
 						variant="contained"
 						sx={{ mt: 3, mb: 2 }}
+						disabled={loading} // Disable button when loading
 					>
-						Sign In
+						{loading ? (
+							<CircularProgress size={24} color="inherit" />
+						) : (
+							'Sign In'
+						)}
 					</Button>
 					<Typography variant="body2" align="center">
 						Don't have an account?{' '}
@@ -134,6 +160,20 @@ function Login() {
 					</Typography>
 				</Box>
 			</Paper>
+			<Snackbar
+				open={snackbarOpen}
+				autoHideDuration={3000}
+				onClose={handleSnackbarClose}
+				anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
+			>
+				<Alert
+					onClose={handleSnackbarClose}
+					severity="success"
+					sx={{ width: '100%' }}
+				>
+					{successMessage}
+				</Alert>
+			</Snackbar>
 		</Container>
 	);
 }

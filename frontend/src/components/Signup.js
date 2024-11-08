@@ -7,9 +7,11 @@ import {
 	Button,
 	Typography,
 	Alert,
+	Snackbar,
 	Link,
 	InputAdornment,
 	IconButton,
+	CircularProgress,
 } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import Visibility from '@mui/icons-material/Visibility';
@@ -25,8 +27,11 @@ function Signup() {
 	const [error, setError] = useState('');
 	const [emailError, setEmailError] = useState('');
 	const [passwordError, setPasswordError] = useState('');
+	const [successMessage, setSuccessMessage] = useState('');
 	const [showPassword, setShowPassword] = useState(false);
 	const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+	const [snackbarOpen, setSnackbarOpen] = useState(false);
+	const [loading, setLoading] = useState(false); // Loading state
 	const navigate = useNavigate();
 
 	const handleChange = (e) => {
@@ -46,6 +51,8 @@ function Signup() {
 		setError('');
 		setEmailError('');
 		setPasswordError('');
+		setSuccessMessage('');
+		setLoading(true); // Set loading to true
 
 		if (
 			!formData.name ||
@@ -54,6 +61,7 @@ function Signup() {
 			!formData.confirmPassword
 		) {
 			setError('Please fill in all fields.');
+			setLoading(false); // Set loading to false on error
 			return;
 		}
 
@@ -61,11 +69,13 @@ function Signup() {
 			setEmailError(
 				'Please enter a valid email address. Example: user@example.com'
 			);
+			setLoading(false); // Set loading to false on error
 			return;
 		}
 
 		if (formData.password !== formData.confirmPassword) {
 			setPasswordError('Passwords do not match.');
+			setLoading(false); // Set loading to false on error
 			return;
 		}
 
@@ -81,13 +91,24 @@ function Signup() {
 			const data = await response.json();
 
 			if (response.ok) {
-				navigate('/login');
+				setSuccessMessage('Signup successful! You can now log in.');
+				setSnackbarOpen(true);
+				setTimeout(() => {
+					setLoading(false); // Set loading to false before navigating
+					navigate('/login');
+				}, 3000); // Wait for 3 seconds before navigating
 			} else {
 				setError(data.message);
+				setLoading(false); // Set loading to false on error
 			}
 		} catch (err) {
 			setError('An error occurred. Please try again.');
+			setLoading(false); // Set loading to false on error
 		}
+	};
+
+	const handleSnackbarClose = () => {
+		setSnackbarOpen(false);
 	};
 
 	return (
@@ -132,6 +153,7 @@ function Signup() {
 						autoFocus
 						value={formData.name}
 						onChange={handleChange}
+						disabled={loading} // Disable input when loading
 					/>
 					<TextField
 						margin="normal"
@@ -143,6 +165,7 @@ function Signup() {
 						autoComplete="email"
 						value={formData.email}
 						onChange={handleChange}
+						disabled={loading} // Disable input when loading
 					/>
 					<TextField
 						margin="normal"
@@ -168,6 +191,7 @@ function Signup() {
 								</InputAdornment>
 							),
 						}}
+						disabled={loading} // Disable input when loading
 					/>
 					<TextField
 						margin="normal"
@@ -193,14 +217,20 @@ function Signup() {
 								</InputAdornment>
 							),
 						}}
+						disabled={loading} // Disable input when loading
 					/>
 					<Button
 						type="submit"
 						fullWidth
 						variant="contained"
 						sx={{ mt: 3, mb: 2 }}
+						disabled={loading} // Disable button when loading
 					>
-						Sign Up
+						{loading ? (
+							<CircularProgress size={24} color="inherit" />
+						) : (
+							'Sign Up'
+						)}
 					</Button>
 					<Typography variant="body2" align="center">
 						Already have an account?{' '}
@@ -210,6 +240,20 @@ function Signup() {
 					</Typography>
 				</Box>
 			</Paper>
+			<Snackbar
+				open={snackbarOpen}
+				autoHideDuration={3000}
+				onClose={handleSnackbarClose}
+				anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
+			>
+				<Alert
+					onClose={handleSnackbarClose}
+					severity="success"
+					sx={{ width: '100%' }}
+				>
+					{successMessage}
+				</Alert>
+			</Snackbar>
 		</Container>
 	);
 }
