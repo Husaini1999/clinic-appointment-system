@@ -27,10 +27,10 @@ const Chatbot = () => {
 	const theme = createTheme({
 		palette: {
 			primary: {
-				main: '#000000', // Dark gray for main backgrounds (softer than black)
-				light: '#B3B3B3', // Medium-light gray for subtle backgrounds
-				dark: '#1A1A1A', // Almost black for stronger emphasis
-				contrastText: '#FFFFFF', // Friendly blue for contrasting text, user-friendly
+				main: '#000000',
+				light: '#B3B3B3',
+				dark: '#1A1A1A',
+				contrastText: '#FFFFFF',
 			},
 		},
 	});
@@ -54,12 +54,40 @@ const Chatbot = () => {
 		setUserInput(e.target.value);
 	};
 
-	const handleSend = () => {
+	const handleSend = async () => {
 		if (userInput.trim()) {
+			console.log(process.env.OPENAI_SECRET_KEY);
 			setResponses((prev) => [...prev, { text: userInput, sender: 'user' }]);
-			const aiResponse = getAIResponse(userInput);
-			setResponses((prev) => [...prev, { text: aiResponse, sender: 'ai' }]);
 			setUserInput('');
+			const aiResponse = await getAIResponse(userInput);
+			setResponses((prev) => [...prev, { text: aiResponse, sender: 'ai' }]);
+		}
+	};
+
+	const getAIResponse = async (input) => {
+		try {
+			const response = await fetch('/api/openai/chat', {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json',
+				},
+				body: JSON.stringify({
+					messages: [
+						{ role: 'system', content: 'You are a helpful assistant.' },
+						{ role: 'user', content: input },
+					],
+				}),
+			});
+
+			if (!response.ok) {
+				throw new Error('Network response was not ok');
+			}
+
+			const data = await response.json();
+			return data; // This will be the AI response
+		} catch (error) {
+			console.error('Error fetching AI response:', error);
+			return 'I am sorry, I could not process your request at this time.';
 		}
 	};
 
@@ -89,21 +117,6 @@ const Chatbot = () => {
 
 		setResponses((prev) => [...prev, { text: category, sender: 'user' }]);
 		setResponses((prev) => [...prev, { text: response, sender: 'ai' }]);
-	};
-
-	const getAIResponse = (input) => {
-		const lowerInput = input.toLowerCase();
-		if (lowerInput.includes('appointment')) {
-			return 'You can book an appointment by clicking the "Book Appointment" button on our homepage.';
-		} else if (lowerInput.includes('services')) {
-			return 'We offer a variety of services including general health checkups, dental care, and physiotherapy.';
-		} else if (lowerInput.includes('location')) {
-			return 'We are located at 123 Cherang Street, Kuala Lumpur, 50450, Malaysia.';
-		} else if (lowerInput.includes('contact')) {
-			return 'You can reach us at info@primercherang.com or call us at +60 3-1234 5678.';
-		} else {
-			return 'I am sorry, I did not understand that. Can you please rephrase?';
-		}
 	};
 
 	const handleModeChange = (event) => {
@@ -162,7 +175,7 @@ const Chatbot = () => {
 						width: '400px',
 						maxHeight: '80vh',
 						display: 'flex',
-						flexDirection: 'column', // Stack children vertically
+						flexDirection: 'column',
 					}}
 				>
 					{/* Sticky Header */}
@@ -176,7 +189,7 @@ const Chatbot = () => {
 							backgroundColor: 'background.paper',
 							zIndex: 1,
 							borderBottom: '1px solid black',
-							p: 1, // Add some padding for better spacing
+							p: 1,
 						}}
 					>
 						<Box sx={{ display: 'flex', alignItems: 'center' }}>
@@ -248,10 +261,9 @@ const Chatbot = () => {
 						sx={{
 							display: 'flex',
 							justifyContent: 'space-between',
-
 							flexWrap: 'wrap',
 							backgroundColor: 'background.paper',
-							p: 1, // Add some padding for better spacing
+							p: 1,
 							borderTop: '1px solid black',
 						}}
 					>
@@ -263,9 +275,9 @@ const Chatbot = () => {
 										variant="outlined"
 										onClick={() => handleCategoryClick(category.value)}
 										sx={{
-											flex: '1 1 45%', // Allow buttons to grow and shrink, with a base width of 45%
-											mr: index % 2 === 0 ? 1 : 0, // Add margin-right for even indexed buttons
-											ml: index % 2 === 1 ? 1 : 0, // Add margin-left for odd indexed buttons
+											flex: '1 1 45%',
+											mr: index % 2 === 0 ? 1 : 0,
+											ml: index % 2 === 1 ? 1 : 0,
 											mb: 1,
 											bgcolor: 'primary.main',
 											color: 'primary.contrastText',
