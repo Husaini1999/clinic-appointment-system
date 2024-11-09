@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
 	Container,
 	Paper,
@@ -8,35 +8,50 @@ import {
 	TableCell,
 	TableContainer,
 	TableRow,
+	TableHead,
 	Button,
 	Box,
 	Chip,
+	TextField,
 } from '@mui/material';
 import { format } from 'date-fns';
 import { useNavigate } from 'react-router-dom';
 
 function Dashboard() {
 	const [appointments, setAppointments] = useState([]);
+	const [filteredAppointments, setFilteredAppointments] = useState([]);
+	const [filter, setFilter] = useState('');
 	const navigate = useNavigate();
 	const user = JSON.parse(localStorage.getItem('user'));
 
-	useEffect(() => {
-		fetchAppointments();
-	}, []);
-
-	const fetchAppointments = async () => {
+	const fetchAppointments = useCallback(async () => {
 		try {
-			const response = await fetch('/api/appointments', {
+			const endpoint =
+				user.role === 'patient'
+					? '/api/appointments/patient'
+					: '/api/appointments';
+
+			const response = await fetch(endpoint, {
 				headers: {
 					Authorization: `Bearer ${localStorage.getItem('token')}`,
 				},
 			});
+
+			if (!response.ok) {
+				throw new Error('Network response was not ok');
+			}
+
 			const data = await response.json();
 			setAppointments(data);
+			setFilteredAppointments(data);
 		} catch (error) {
 			console.error('Error fetching appointments:', error);
 		}
-	};
+	}, [user.role]);
+
+	useEffect(() => {
+		fetchAppointments();
+	}, [fetchAppointments]);
 
 	const getStatusColor = (status) => {
 		switch (status) {
@@ -50,6 +65,19 @@ function Dashboard() {
 				return 'default';
 			default:
 				return 'default';
+		}
+	};
+
+	const handleFilterChange = (event) => {
+		const value = event.target.value;
+		setFilter(value);
+		if (value) {
+			const filtered = appointments.filter((appointment) =>
+				appointment.status.toLowerCase().includes(value.toLowerCase())
+			);
+			setFilteredAppointments(filtered);
+		} else {
+			setFilteredAppointments(appointments);
 		}
 	};
 
@@ -68,14 +96,46 @@ function Dashboard() {
 				</Button>
 			</Box>
 
+			{user.role === 'staff' && (
+				<Box sx={{ mb: 2 }}>
+					<TextField
+						label="Filter by Status"
+						variant="outlined"
+						value={filter}
+						onChange={handleFilterChange}
+					/>
+				</Box>
+			)}
+
 			<TableContainer component={Paper}>
 				<Table>
+					<TableHead>
+						<TableRow>
+							<TableCell>No.</TableCell>
+							<TableCell>Date & Time</TableCell>
+							{user.role === 'staff' && <TableCell>Patient Name</TableCell>}
+							<TableCell>Treatment</TableCell>
+							<TableCell>Status</TableCell>
+							<TableCell>Notes</TableCell>
+							{user.role === 'staff' && <TableCell>Actions</TableCell>}
+						</TableRow>
+					</TableHead>
 					<TableBody>
-						{appointments.map((appointment) => (
+						{(user.role === 'patient'
+							? filteredAppointments.filter(
+									(appointment) => appointment.status !== 'cancelled'
+							  )
+							: filteredAppointments
+						).map((appointment, index) => (
 							<TableRow key={appointment._id}>
+								<TableCell>{index + 1}</TableCell>
 								<TableCell>
 									{format(new Date(appointment.appointmentTime), 'PPpp')}
 								</TableCell>
+								<TableCell>{appointment.notes}</TableCell>
+								{user.role === 'staff' && (
+									<TableCell>{appointment.patientName}</TableCell>
+								)}
 								<TableCell>{appointment.treatment}</TableCell>
 								<TableCell>
 									<Chip
@@ -83,23 +143,21 @@ function Dashboard() {
 										color={getStatusColor(appointment.status)}
 									/>
 								</TableCell>
-								<TableCell>{appointment.notes}</TableCell>
-								{user.role === 'staff' && (
-									<TableCell>{appointment.patientName}</TableCell>
-								)}
+
 								<TableCell>
-									{appointment.status === 'pending' && (
-										<Button
-											variant="outlined"
-											color="error"
-											size="small"
-											onClick={() => {
-												/* Add cancel logic */
-											}}
-										>
-											Cancel
-										</Button>
-									)}
+									{appointment.status === 'pending' &&
+										user.role === 'staff' && (
+											<Button
+												variant="outlined"
+												color="error"
+												size="small"
+												onClick={() => {
+													/* Add cancel logic */
+												}}
+											>
+												Cancel
+											</Button>
+										)}
 								</TableCell>
 							</TableRow>
 						))}

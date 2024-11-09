@@ -10,9 +10,11 @@ import CssBaseline from '@mui/material/CssBaseline';
 import Login from './components/Login';
 import Dashboard from './components/Dashboard';
 import Booking from './components/Booking';
-import Navbar from './components/Navbar';
 import Homepage from './components/Homepage';
 import Signup from './components/Signup';
+import PatientDashboard from './components/PatientDashboard';
+import StaffDashboard from './components/StaffDashboard';
+import Layout from './components/Layout';
 
 const theme = createTheme({
 	palette: {
@@ -89,9 +91,19 @@ const theme = createTheme({
 	},
 });
 
-const PrivateRoute = ({ children }) => {
+const PrivateRoute = ({ children, role }) => {
 	const token = localStorage.getItem('token');
-	return token ? children : <Navigate to="/login" />;
+	const user = JSON.parse(localStorage.getItem('user'));
+
+	if (!token) {
+		return <Navigate to="/login" />;
+	}
+
+	if (role && user.role !== role) {
+		return <Navigate to="/dashboard" />; // Redirect to a default dashboard if role doesn't match
+	}
+
+	return children;
 };
 
 function App() {
@@ -99,28 +111,38 @@ function App() {
 		<ThemeProvider theme={theme}>
 			<CssBaseline />
 			<Router>
-				<Navbar />
-				<Routes>
-					<Route path="/" element={<Homepage />} />
-					<Route path="/login" element={<Login />} />
-					<Route
-						path="/dashboard"
-						element={
-							<PrivateRoute>
-								<Dashboard />
-							</PrivateRoute>
-						}
-					/>
-					<Route
-						path="/booking"
-						element={
-							<PrivateRoute>
-								<Booking />
-							</PrivateRoute>
-						}
-					/>
-					<Route path="/signup" element={<Signup />} />
-				</Routes>
+				<Layout>
+					<Routes>
+						<Route path="/" element={<Homepage />} />
+						<Route path="/login" element={<Login />} />
+						<Route path="/signup" element={<Signup />} />
+						<Route
+							path="/dashboard"
+							element={
+								<PrivateRoute>
+									<Dashboard />
+								</PrivateRoute>
+							}
+						/>
+						<Route path="/booking" element={<Booking />} />
+						<Route
+							path="/patient-dashboard"
+							element={
+								<PrivateRoute role="patient">
+									<PatientDashboard />
+								</PrivateRoute>
+							}
+						/>
+						<Route
+							path="/staff-dashboard"
+							element={
+								<PrivateRoute role="staff">
+									<StaffDashboard />
+								</PrivateRoute>
+							}
+						/>
+					</Routes>
+				</Layout>
 			</Router>
 		</ThemeProvider>
 	);

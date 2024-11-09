@@ -1,9 +1,39 @@
 const express = require('express');
 const router = express.Router();
 const Appointment = require('../models/Appointment');
+const authMiddleware = require('../middleware/auth');
+
+// Middleware to protect the routes
+router.use(authMiddleware);
+
+// Get all appointments for staff to view
+router.get('/', async (req, res) => {
+	try {
+		const allAppointments = await Appointment.find();
+
+		res.status(200).json(allAppointments);
+	} catch (error) {
+		console.error('Error fetching all appointments:', error);
+		res.status(500).json({ message: 'Error fetching appointments' });
+	}
+});
+
+// Get appointments for the authenticated patient
+router.get('/patient', async (req, res) => {
+	try {
+		const patientAppointments = await Appointment.find({
+			email: req.user.email,
+		});
+
+		res.status(200).json(patientAppointments);
+	} catch (error) {
+		console.error('Error fetching patient appointments:', error);
+		res.status(500).json({ message: 'Error fetching appointments' });
+	}
+});
 
 // Public appointment booking endpoint
-router.post('/public', async (req, res) => {
+router.post('/create', async (req, res) => {
 	try {
 		const { name, email, phone, treatment, appointmentTime, notes } = req.body;
 
@@ -27,7 +57,7 @@ router.post('/public', async (req, res) => {
 		}
 
 		// Create new appointment
-		const appointment = new Appointment({
+		const newAppointment = new Appointment({
 			patientName: name,
 			email,
 			phone,
@@ -37,14 +67,11 @@ router.post('/public', async (req, res) => {
 			status: 'pending',
 		});
 
-		await appointment.save();
-
-		// Here you would typically send confirmation emails
-		// You'll need to implement email sending functionality
+		await newAppointment.save();
 
 		res.status(201).json({
 			message: 'Appointment booked successfully',
-			appointment,
+			appointment: newAppointment,
 		});
 	} catch (error) {
 		console.error('Appointment booking error:', error);
@@ -52,6 +79,16 @@ router.post('/public', async (req, res) => {
 	}
 });
 
-// CRUD operations for appointments
+// Optional: Add filtering functionality for appointments
+router.get('/filter', async (req, res) => {
+	const { status } = req.query; // e.g., ?status=pending
+	try {
+		const filteredAppointments = await Appointment.find({ status });
+		res.status(200).json(filteredAppointments);
+	} catch (error) {
+		console.error('Error fetching filtered appointments:', error);
+		res.status(500).json({ message: 'Error fetching appointments' });
+	}
+});
 
 module.exports = router;

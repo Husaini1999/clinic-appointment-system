@@ -93,7 +93,7 @@ function Homepage() {
 	};
 
 	return (
-		<Box sx={{ overflow: 'auto', pt: 8 }}>
+		<Box sx={{ overflow: 'auto' }}>
 			{/* Hero Section */}
 			<Box
 				id="home"

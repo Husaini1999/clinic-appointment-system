@@ -9,6 +9,11 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
+// Routes
+app.use('/api/appointments', require('./routes/appointments'));
+app.use('/api/auth', require('./routes/auth'));
+app.use('/api/openai', require('./routes/openai'));
+
 // MongoDB connection string
 const mongoURI = `mongodb+srv://${process.env.MONGODB_USERNAME}:${process.env.MONGODB_PASSWORD}@${process.env.MONGODB_CLUSTER}.mongodb.net/${process.env.MONGODB_DATABASE}?retryWrites=true&w=majority`;
 
@@ -24,11 +29,6 @@ mongoose
 		console.error('MongoDB connection error:', err.message);
 		process.exit(1);
 	});
-
-// Routes
-app.use('/api/auth', require('./routes/auth'));
-app.use('/api/appointments', require('./routes/appointments'));
-app.use('/api/openai', require('./routes/openai'));
 
 // Basic error handling
 app.use((err, req, res, next) => {

@@ -65,6 +65,12 @@ function Login() {
 					setLoading(false); // Set loading to false before navigating
 					navigate('/dashboard');
 				}, 3000); // Wait for 3 seconds before navigating
+
+				if (data.user.role === 'patient') {
+					// Redirect to patient dashboard
+				} else {
+					// Redirect to staff dashboard
+				}
 			} else {
 				setError(data.message);
 				setLoading(false); // Set loading to false on error
