@@ -29,7 +29,7 @@ const Header = () => {
 					borderBottom: '1px solid rgba(0,0,0,0.05)',
 				}}
 			>
-				<Container maxWidth="lg">
+				<Container maxWidth="xl">
 					<Toolbar
 						disableGutters
 						sx={{

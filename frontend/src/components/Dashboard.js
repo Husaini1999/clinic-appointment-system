@@ -81,6 +81,25 @@ function Dashboard() {
 		}
 	};
 
+	const tableHeaders = [
+		{ label: 'No.' },
+		{ label: user.role === 'staff' ? 'Patient Name' : null },
+		{ label: 'Treatment' },
+		{ label: 'Date & Time' },
+		{ label: 'Status' },
+		{ label: 'Notes' },
+		{ label: user.role === 'staff' ? 'Actions' : null },
+	].filter((header) => header.label !== null);
+
+	// Determine the appointments to display based on user role
+	const today = new Date();
+	const upcomingAppointments = appointments.filter(
+		(appointment) => new Date(appointment.appointmentTime) >= today
+	);
+	const pastAppointments = appointments.filter(
+		(appointment) => new Date(appointment.appointmentTime) < today
+	);
+
 	return (
 		<Container maxWidth="lg" sx={{ mt: 4 }}>
 			<Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 4 }}>
@@ -107,60 +126,124 @@ function Dashboard() {
 				</Box>
 			)}
 
+			{/* Upcoming Appointments Table */}
+			<Typography variant="h5" sx={{ mb: 2 }}>
+				Upcoming Appointments
+			</Typography>
+			<TableContainer component={Paper} sx={{ mb: 4 }}>
+				<Table>
+					<TableHead>
+						<TableRow>
+							{tableHeaders.map((header, index) => (
+								<TableCell key={index}>{header.label}</TableCell>
+							))}
+						</TableRow>
+					</TableHead>
+					<TableBody>
+						{upcomingAppointments.length > 0 ? (
+							upcomingAppointments.map((appointment, index) => (
+								<TableRow key={appointment._id}>
+									<TableCell>{index + 1}</TableCell>
+									{user.role === 'staff' && (
+										<TableCell> {appointment.patientName} </TableCell>
+									)}
+									<TableCell>{appointment.treatment}</TableCell>
+									<TableCell>
+										{format(new Date(appointment.appointmentTime), 'PPpp')}
+									</TableCell>
+									<TableCell>
+										<Chip
+											label={appointment.status}
+											color={getStatusColor(appointment.status)}
+										/>
+									</TableCell>
+									<TableCell>{appointment.notes}</TableCell>
+									<TableCell>
+										{appointment.status === 'pending' &&
+											user.role === 'staff' && (
+												<Button
+													variant="outlined"
+													color="error"
+													size="small"
+													onClick={() => {
+														/* Add cancel logic */
+													}}
+												>
+													Cancel
+												</Button>
+											)}
+									</TableCell>
+								</TableRow>
+							))
+						) : (
+							<TableRow>
+								<TableCell colSpan={tableHeaders.length} align="center">
+									No upcoming appointments available.
+								</TableCell>
+							</TableRow>
+						)}
+					</TableBody>
+				</Table>
+			</TableContainer>
+
+			{/* Past Appointments Table */}
+			<Typography variant="h5" sx={{ mb: 2 }}>
+				Past Appointments
+			</Typography>
 			<TableContainer component={Paper}>
 				<Table>
 					<TableHead>
 						<TableRow>
-							<TableCell>No.</TableCell>
-							<TableCell>Date & Time</TableCell>
-							{user.role === 'staff' && <TableCell>Patient Name</TableCell>}
-							<TableCell>Treatment</TableCell>
-							<TableCell>Status</TableCell>
-							<TableCell>Notes</TableCell>
-							{user.role === 'staff' && <TableCell>Actions</TableCell>}
+							{tableHeaders.map((header, index) => (
+								<TableCell key={index}>{header.label}</TableCell>
+							))}
 						</TableRow>
 					</TableHead>
 					<TableBody>
-						{(user.role === 'patient'
-							? filteredAppointments.filter(
-									(appointment) => appointment.status !== 'cancelled'
-							  )
-							: filteredAppointments
-						).map((appointment, index) => (
-							<TableRow key={appointment._id}>
-								<TableCell>{index + 1}</TableCell>
-								<TableCell>
-									{format(new Date(appointment.appointmentTime), 'PPpp')}
-								</TableCell>
-								<TableCell>{appointment.notes}</TableCell>
-								{user.role === 'staff' && (
-									<TableCell>{appointment.patientName}</TableCell>
-								)}
-								<TableCell>{appointment.treatment}</TableCell>
-								<TableCell>
-									<Chip
-										label={appointment.status}
-										color={getStatusColor(appointment.status)}
-									/>
-								</TableCell>
+						{pastAppointments.length > 0 ? (
+							pastAppointments.map((appointment, index) => (
+								<TableRow key={appointment._id}>
+									<TableCell>{index + 1}</TableCell>
 
-								<TableCell>
-									{appointment.status === 'pending' &&
-										user.role === 'staff' && (
-											<Button
-												variant="outlined"
-												color="error"
-												size="small"
-												onClick={() => {
-													/* Add cancel logic */
-												}}
-											>
-												Cancel
-											</Button>
-										)}
+									{user.role === 'staff' && (
+										<TableCell> {appointment.patientName} </TableCell>
+									)}
+
+									<TableCell>{appointment.treatment}</TableCell>
+									<TableCell>
+										{format(new Date(appointment.appointmentTime), 'PPpp')}
+									</TableCell>
+									<TableCell>
+										<Chip
+											label={appointment.status}
+											color={getStatusColor(appointment.status)}
+										/>
+									</TableCell>
+									<TableCell>{appointment.notes}</TableCell>
+									<TableCell>
+										{appointment.status === 'pending' &&
+											user.role === 'staff' && (
+												<Button
+													variant="outlined"
+													color="error"
+													size="small"
+													onClick={() => {
+														/* Add cancel logic */
+													}}
+												>
+													Cancel
+												</Button>
+											)}
+									</TableCell>
+								</TableRow>
+							))
+						) : (
+							<TableRow>
+								<TableCell colSpan={tableHeaders.length} align="center">
+									No past appointments available.
 								</TableCell>
 							</TableRow>
-						))}
+						)}
 					</TableBody>
 				</Table>
 			</TableContainer>
