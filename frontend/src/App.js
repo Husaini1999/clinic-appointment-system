@@ -13,6 +13,7 @@ import Booking from './components/Booking';
 import Homepage from './components/Homepage';
 import Signup from './components/Signup';
 import Layout from './components/Layout';
+import ProfileSettings from './components/ProfileSettings';
 
 const theme = createTheme({
 	palette: {
@@ -123,6 +124,14 @@ function App() {
 							}
 						/>
 						<Route path="/booking" element={<Booking />} />
+						<Route
+							path="/profile"
+							element={
+								<PrivateRoute>
+									<ProfileSettings />
+								</PrivateRoute>
+							}
+						/>
 					</Routes>
 				</Layout>
 			</Router>

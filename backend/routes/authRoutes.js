@@ -140,4 +140,27 @@ router.put('/update-user', authMiddleware, async (req, res) => {
 	}
 });
 
+// Add password change endpoint
+router.put('/change-password', authMiddleware, async (req, res) => {
+	try {
+		const { currentPassword, newPassword } = req.body;
+		const user = await User.findById(req.user.id);
+
+		// Verify current password
+		const isMatch = await user.matchPassword(currentPassword);
+		if (!isMatch) {
+			return res.status(400).json({ message: 'Current password is incorrect' });
+		}
+
+		// Update password
+		user.password = newPassword;
+		await user.save();
+
+		res.json({ message: 'Password updated successfully' });
+	} catch (error) {
+		console.error('Error changing password:', error);
+		res.status(500).json({ message: 'Server error' });
+	}
+});
+
 module.exports = router;

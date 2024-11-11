@@ -3,6 +3,7 @@ import { Button, Box } from '@mui/material';
 import { useNavigate, useLocation } from 'react-router-dom';
 import DashboardIcon from '@mui/icons-material/Dashboard';
 import CalendarTodayIcon from '@mui/icons-material/CalendarToday';
+import AccountCircleIcon from '@mui/icons-material/AccountCircle';
 import BookingModal from './Booking'; // Import the BookingModal component
 
 function Navbar() {
@@ -81,6 +82,8 @@ function Navbar() {
 							borderColor: 'primary.main',
 							borderRadius: '8px',
 							padding: '4px',
+							display: 'flex',
+							gap: 1,
 						}}
 					>
 						<Button
@@ -115,6 +118,21 @@ function Navbar() {
 								Book Appointment
 							</Button>
 						)}
+						<Button
+							color="primary"
+							onClick={() => handleNavigation('/profile')}
+							sx={{
+								fontWeight: 500,
+								px: 1,
+								color: 'text.primary',
+								'&:hover': {
+									backgroundColor: 'rgba(0,0,0,0.05)',
+								},
+							}}
+						>
+							<AccountCircleIcon sx={{ mr: 1 }} />
+							Profile
+						</Button>
 					</Box>
 					<Button
 						color="secondary"
