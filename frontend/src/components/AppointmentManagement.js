@@ -24,11 +24,20 @@ import {
 	Grid,
 	TableSortLabel,
 	TablePagination,
+	IconButton,
+	Tooltip,
 } from '@mui/material';
+import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+import BlockIcon from '@mui/icons-material/Block';
+import CancelIcon from '@mui/icons-material/Cancel';
+import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp';
+import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import { format } from 'date-fns';
 import SearchIcon from '@mui/icons-material/Search';
 import ClearIcon from '@mui/icons-material/Clear';
 import { canCancelAppointments } from '../utils/roleUtils';
+import { enhancedTableStyles } from './styles/tableStyles';
+import NotesHistory from './NotesHistory';
 
 // Separate Approve Modal Component
 const ApproveModal = React.memo(
@@ -133,20 +142,49 @@ const CancelModal = React.memo(
 	)
 );
 
-// Update the tableStyles constant
-const tableStyles = {
-	width: '100%',
-	tableLayout: 'fixed',
-	'& .MuiTableCell-root': {
-		padding: '16px',
-		height: 'auto',
-		verticalAlign: 'top', // Align content to top
-	},
-	'& .MuiTableCell-head': {
-		backgroundColor: '#f5f5f5',
-		fontWeight: 'bold',
-		whiteSpace: 'nowrap', // Keep headers on single line
-	},
+// Create a collapsible cell component
+const CollapsibleNotesCell = ({ notes }) => {
+	const [isExpanded, setIsExpanded] = useState(false);
+
+	return (
+		<TableCell
+			sx={{
+				borderRight: 'none',
+				borderLeft: 'none',
+				padding: '8px',
+				verticalAlign: 'middle',
+				textAlign: 'center',
+			}}
+		>
+			<Box sx={{ position: 'relative' }}>
+				<Box
+					sx={{
+						maxHeight: isExpanded ? 'none' : '60px',
+						overflow: 'hidden',
+						transition: 'max-height 0.3s ease-in-out',
+					}}
+				>
+					<NotesHistory notes={notes} />
+				</Box>
+				{notes?.length > 0 && (
+					<IconButton
+						size="small"
+						onClick={() => setIsExpanded(!isExpanded)}
+						sx={{
+							position: 'absolute',
+							bottom: -8,
+							right: -8,
+							backgroundColor: 'background.paper',
+							boxShadow: 1,
+							'&:hover': { backgroundColor: 'grey.100' },
+						}}
+					>
+						{isExpanded ? <KeyboardArrowUpIcon /> : <KeyboardArrowDownIcon />}
+					</IconButton>
+				)}
+			</Box>
+		</TableCell>
+	);
 };
 
 function AppointmentManagement({ appointments, onRefresh }) {
@@ -272,9 +310,9 @@ function AppointmentManagement({ appointments, onRefresh }) {
 		return a[property] - b[property];
 	};
 
-	// Keep the sorting logic
+	// Modified sorting logic
 	const sortedAppointments = React.useMemo(() => {
-		if (!orderBy) return filteredAppointments;
+		if (!orderBy) return filteredAppointments; // Return unsorted if no orderBy
 
 		return [...filteredAppointments].sort((a, b) => {
 			const result = compareValues(a, b, orderBy);
@@ -282,23 +320,16 @@ function AppointmentManagement({ appointments, onRefresh }) {
 		});
 	}, [filteredAppointments, order, orderBy]);
 
-	// Add the pagination logic
-	const sortedAndPaginatedAppointments = React.useMemo(() => {
-		return sortedAppointments.slice(
-			page * rowsPerPage,
-			page * rowsPerPage + rowsPerPage
-		);
-	}, [sortedAppointments, page, rowsPerPage]);
-
 	// Table headers configuration
 	const headCells = [
-		{ id: 'patientName', label: 'Patient Name', width: '15%' },
-		{ id: 'email', label: 'Email', width: '18%' },
-		{ id: 'phone', label: 'Phone', width: '12%' },
-		{ id: 'treatment', label: 'Treatment', width: '13%' },
-		{ id: 'appointmentTime', label: 'Date & Time', width: '12%' },
-		{ id: 'status', label: 'Status', width: '10%' },
-		{ id: 'actions', label: 'Actions', sortable: false, width: '20%' },
+		{ id: 'patientName', label: 'Patient Name', width: '10%' },
+		{ id: 'email', label: 'Email', width: '12%' },
+		{ id: 'phone', label: 'Phone', width: '10%' },
+		{ id: 'treatment', label: 'Treatment', width: '12%' },
+		{ id: 'appointmentTime', label: 'Date & Time', width: '11%' },
+		{ id: 'notes', label: 'Notes History', width: '15%' },
+		{ id: 'status', label: 'Status', width: '8%' },
+		{ id: 'actions', label: 'Actions', sortable: false, width: '12%' },
 	];
 
 	// Add clear filters function
@@ -321,6 +352,19 @@ function AppointmentManagement({ appointments, onRefresh }) {
 		setPage(0);
 	};
 
+	// Modify the sorting logic to include pagination
+	const sortedAndPaginatedAppointments = React.useMemo(() => {
+		const sorted = !orderBy
+			? filteredAppointments
+			: [...filteredAppointments].sort((a, b) => {
+					const result = compareValues(a, b, orderBy);
+					return order === 'asc' ? result : -result;
+			  });
+
+		// Apply pagination
+		return sorted.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage);
+	}, [filteredAppointments, order, orderBy, page, rowsPerPage]);
+
 	// Reset page when filters change
 	React.useEffect(() => {
 		setPage(0);
@@ -332,13 +376,36 @@ function AppointmentManagement({ appointments, onRefresh }) {
 		setCancelModalOpen(true);
 	};
 
+	// Replace the existing tableStyles with this
+	const mergedTableStyles = {
+		...enhancedTableStyles.root,
+		width: '100%',
+		tableLayout: 'fixed',
+		'& .MuiTableCell-root': {
+			...enhancedTableStyles.root['& .MuiTableCell-root'],
+			padding: '16px',
+			height: 'auto',
+			verticalAlign: 'middle',
+			textAlign: 'center',
+		},
+		'& .MuiTableRow-root': {
+			...enhancedTableStyles.root['& .MuiTableRow-root'],
+		},
+		'& .MuiTableHead-root': {
+			'& .MuiTableCell-root': {
+				backgroundColor: (theme) => theme.palette.primary.main,
+				color: 'white',
+				fontWeight: 'bold',
+				whiteSpace: 'nowrap',
+				textAlign: 'center',
+			},
+		},
+	};
+
 	return (
 		<Box sx={{ width: '100%', overflow: 'hidden' }}>
 			{/* Search and Filter Section */}
-			<Grid container spacing={2} sx={{ mb: 2 }}>
-				{' '}
-				{/* Reduced margin bottom */}
-				{/* Search Field */}
+			<Grid container spacing={2} sx={{ mt: 1, mb: 2 }}>
 				<Grid item xs={12} md={6}>
 					<TextField
 						fullWidth
@@ -455,23 +522,24 @@ function AppointmentManagement({ appointments, onRefresh }) {
 			<TableContainer
 				component={Paper}
 				sx={{
+					...enhancedTableStyles.tableContainer,
 					width: '100%',
 					overflowX: 'hidden',
+					overflowY: 'hidden', // Prevent vertical scroll
 					'& .MuiTable-root': {
-						minWidth: 'auto',
 						tableLayout: 'fixed',
 					},
 				}}
 			>
-				<Table sx={tableStyles}>
+				<Table sx={mergedTableStyles} stickyHeader>
 					<TableHead>
 						<TableRow>
 							{headCells.map((headCell) => (
 								<TableCell
 									key={headCell.id}
+									width={headCell.width}
 									sx={{
 										whiteSpace: 'nowrap',
-										width: headCell.width || 'auto',
 										textAlign: headCell.id === 'actions' ? 'center' : 'left',
 									}}
 								>
@@ -480,6 +548,18 @@ function AppointmentManagement({ appointments, onRefresh }) {
 											active={orderBy === headCell.id}
 											direction={orderBy === headCell.id ? order : 'asc'}
 											onClick={() => handleRequestSort(headCell.id)}
+											sx={{
+												color: 'white !important',
+												'& .MuiTableSortLabel-icon': {
+													color: 'white !important',
+												},
+												'&.Mui-active': {
+													color: 'white !important',
+													'& .MuiTableSortLabel-icon': {
+														color: 'white !important',
+													},
+												},
+											}}
 										>
 											{headCell.label}
 										</TableSortLabel>
@@ -497,6 +577,9 @@ function AppointmentManagement({ appointments, onRefresh }) {
 									sx={{
 										wordBreak: 'break-word',
 										minHeight: '60px',
+										verticalAlign: 'middle',
+										display: 'table-cell',
+										textAlign: 'center',
 									}}
 								>
 									{appointment.patientName}
@@ -506,6 +589,9 @@ function AppointmentManagement({ appointments, onRefresh }) {
 									sx={{
 										wordBreak: 'break-word',
 										minHeight: '60px',
+										verticalAlign: 'middle',
+										display: 'table-cell',
+										textAlign: 'center',
 									}}
 								>
 									{appointment.email}
@@ -515,6 +601,9 @@ function AppointmentManagement({ appointments, onRefresh }) {
 									sx={{
 										whiteSpace: 'nowrap',
 										minHeight: '60px',
+										verticalAlign: 'middle',
+										display: 'table-cell',
+										textAlign: 'center',
 									}}
 								>
 									{appointment.phone}
@@ -524,6 +613,9 @@ function AppointmentManagement({ appointments, onRefresh }) {
 									sx={{
 										wordBreak: 'break-word',
 										minHeight: '60px',
+										verticalAlign: 'middle',
+										display: 'table-cell',
+										textAlign: 'center',
 									}}
 								>
 									{appointment.treatment}
@@ -533,6 +625,9 @@ function AppointmentManagement({ appointments, onRefresh }) {
 									sx={{
 										minHeight: '60px',
 										textAlign: 'center',
+										verticalAlign: 'middle',
+										display: 'table-cell',
+										alignItems: 'center',
 									}}
 								>
 									{format(new Date(appointment.appointmentTime), 'PP')}
@@ -540,12 +635,14 @@ function AppointmentManagement({ appointments, onRefresh }) {
 									{format(new Date(appointment.appointmentTime), 'p')}
 								</TableCell>
 
+								<CollapsibleNotesCell notes={appointment.noteHistory} />
+
 								<TableCell
 									sx={{
 										minHeight: '60px',
-										display: 'flex',
-										justifyContent: 'center',
-										alignItems: 'center',
+										display: 'table-cell',
+										textAlign: 'center',
+										verticalAlign: 'middle',
 									}}
 								>
 									<Chip
@@ -562,55 +659,59 @@ function AppointmentManagement({ appointments, onRefresh }) {
 								<TableCell
 									sx={{
 										minHeight: '60px',
-										width: '15%',
+										padding: '8px',
+										textAlign: 'center',
+										verticalAlign: 'middle',
+										width: '12%',
 									}}
 								>
 									{appointment.status === 'pending' && (
 										<Box
 											sx={{
-												display: 'flex',
-												flexDirection: 'row', // Keep buttons in a row
-												gap: 0.5,
-												flexWrap: 'nowrap', // Prevent wrapping
-												'& .MuiButton-root': {
-													minWidth: 'auto',
-													padding: '4px 8px',
-													fontSize: '0.75rem',
-													whiteSpace: 'nowrap',
+												display: 'inline-flex',
+												justifyContent: 'center',
+												gap: 1,
+												'& .MuiIconButton-root': {
+													padding: '4px',
 												},
 											}}
 										>
-											<Button
-												variant="contained"
-												color="success"
-												size="small"
-												onClick={() => {
-													setSelectedAppointment(appointment);
-													setApproveModalOpen(true);
-												}}
-											>
-												Approve
-											</Button>
-											<Button
-												variant="contained"
-												color="error"
-												size="small"
-												onClick={() => {
-													setSelectedAppointment(appointment);
-													setRejectModalOpen(true);
-												}}
-											>
-												Reject
-											</Button>
-											{canCancel && (
-												<Button
-													variant="contained"
-													color="warning"
+											<Tooltip title="Approve Appointment" arrow>
+												<IconButton
 													size="small"
-													onClick={() => handleCancel(appointment)}
+													color="success"
+													onClick={() => {
+														setSelectedAppointment(appointment);
+														setApproveModalOpen(true);
+													}}
 												>
-													Cancel
-												</Button>
+													<CheckCircleIcon fontSize="small" />
+												</IconButton>
+											</Tooltip>
+
+											<Tooltip title="Reject Appointment" arrow>
+												<IconButton
+													size="small"
+													color="error"
+													onClick={() => {
+														setSelectedAppointment(appointment);
+														setRejectModalOpen(true);
+													}}
+												>
+													<BlockIcon fontSize="small" />
+												</IconButton>
+											</Tooltip>
+
+											{canCancel && (
+												<Tooltip title="Cancel Appointment" arrow>
+													<IconButton
+														size="small"
+														color="warning"
+														onClick={() => handleCancel(appointment)}
+													>
+														<CancelIcon fontSize="small" />
+													</IconButton>
+												</Tooltip>
 											)}
 										</Box>
 									)}

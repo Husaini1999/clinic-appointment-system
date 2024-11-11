@@ -23,6 +23,7 @@ import {
 	TableSortLabel,
 } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
+import { enhancedTableStyles } from './styles/tableStyles';
 
 function UserManagement() {
 	const [users, setUsers] = useState([]);
@@ -196,23 +197,46 @@ function UserManagement() {
 				</Grid>
 			</Grid>
 
-			<TableContainer component={Paper}>
-				<Table>
+			<TableContainer
+				component={Paper}
+				sx={{
+					...enhancedTableStyles.tableContainer,
+					width: '100%',
+					overflowX: 'hidden',
+					overflowY: 'hidden',
+					'& .MuiTable-root': {
+						tableLayout: 'fixed',
+					},
+				}}
+			>
+				<Table sx={enhancedTableStyles.root}>
 					<TableHead>
 						<TableRow>
-							<TableCell>
+							<TableCell width="25%">
 								<TableSortLabel
 									active={orderBy === 'name'}
 									direction={orderBy === 'name' ? order : 'asc'}
 									onClick={() => handleRequestSort('name')}
+									sx={{
+										color: 'white !important',
+										'& .MuiTableSortLabel-icon': {
+											color: 'white !important',
+										},
+										'&.Mui-active': {
+											color: 'white !important',
+											'& .MuiTableSortLabel-icon': {
+												color: 'white !important',
+											},
+										},
+									}}
 								>
 									Name
 								</TableSortLabel>
 							</TableCell>
-							<TableCell>Email</TableCell>
-							<TableCell>Phone</TableCell>
-							<TableCell>Role</TableCell>
-							<TableCell>Actions</TableCell>
+							<TableCell width="30%">Email</TableCell>
+							<TableCell width="15%">Phone</TableCell>
+							<TableCell width="15%">Role</TableCell>
+							<TableCell width="15%">Actions</TableCell>
 						</TableRow>
 					</TableHead>
 					<TableBody>
@@ -228,6 +252,7 @@ function UserManagement() {
 										}
 										color={getRoleColor(user.role)}
 										size="small"
+										sx={{ minWidth: '80px' }}
 									/>
 								</TableCell>
 								<TableCell>
@@ -238,6 +263,15 @@ function UserManagement() {
 											onClick={() => {
 												setSelectedUser(user);
 												setOpen(true);
+											}}
+											sx={{
+												boxShadow: 2,
+												'&:hover': {
+													boxShadow: 4,
+												},
+												padding: '2px 8px',
+												fontSize: '1rem',
+												minWidth: 'auto',
 											}}
 										>
 											Change Role
@@ -258,7 +292,7 @@ function UserManagement() {
 					onRowsPerPageChange={handleChangeRowsPerPage}
 					sx={{
 						borderTop: '1px solid rgba(224, 224, 224, 1)',
-						mt: 2,
+						backgroundColor: '#fff',
 					}}
 				/>
 			</TableContainer>

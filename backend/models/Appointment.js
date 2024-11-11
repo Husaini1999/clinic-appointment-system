@@ -41,6 +41,12 @@ const AppointmentSchema = new mongoose.Schema({
 		type: String,
 		trim: true,
 	},
+	noteHistory: [
+		{
+			type: mongoose.Schema.Types.ObjectId,
+			ref: 'Note',
+		},
+	],
 	createdAt: {
 		type: Date,
 		default: Date.now,

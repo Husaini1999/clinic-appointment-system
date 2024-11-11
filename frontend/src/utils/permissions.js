@@ -18,7 +18,7 @@ const PERMISSIONS = {
 	},
 	PATIENT: {
 		users: ['view_self', 'edit_self'],
-		appointments: ['view_own', 'create', 'cancel_own'],
+		appointments: ['view_own', 'create', 'cancel_own', 'add_notes'],
 	},
 };
 
