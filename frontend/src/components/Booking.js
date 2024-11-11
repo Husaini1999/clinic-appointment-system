@@ -157,6 +157,9 @@ function BookingModal({ open, onClose }) {
 		}
 
 		try {
+			// Clean phone number before sending to backend
+			const cleanPhone = formData.phone.replace(/\s+/g, '');
+
 			// First, update the user's phone number if they're logged in
 			const token = localStorage.getItem('token');
 			if (token) {
@@ -166,7 +169,7 @@ function BookingModal({ open, onClose }) {
 						'Content-Type': 'application/json',
 						Authorization: `Bearer ${token}`,
 					},
-					body: JSON.stringify({ phone: formData.phone }),
+					body: JSON.stringify({ phone: cleanPhone }),
 				});
 
 				if (!updateResponse.ok) {
@@ -174,13 +177,16 @@ function BookingModal({ open, onClose }) {
 				}
 			}
 
-			// Then create the appointment
+			// Then create the appointment with cleaned phone number
 			const response = await fetch('/api/appointments/create', {
 				method: 'POST',
 				headers: {
 					'Content-Type': 'application/json',
 				},
-				body: JSON.stringify(formData),
+				body: JSON.stringify({
+					...formData,
+					phone: cleanPhone,
+				}),
 			});
 
 			const data = await response.json();

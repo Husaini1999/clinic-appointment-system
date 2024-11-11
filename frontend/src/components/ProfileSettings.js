@@ -23,6 +23,7 @@ import {
 	CheckCircle as CheckCircleIcon,
 	Cancel as CancelIcon,
 } from '@mui/icons-material';
+import { isValidPhoneNumber } from 'libphonenumber-js';
 
 function ProfileSettings() {
 	const [userData, setUserData] = useState({
@@ -58,6 +59,8 @@ function ProfileSettings() {
 		confirmPassword: '',
 	});
 
+	const [phoneError, setPhoneError] = useState('');
+
 	useEffect(() => {
 		fetchUserData();
 	}, []);
@@ -91,6 +94,15 @@ function ProfileSettings() {
 
 	const handleProfileUpdate = async (e) => {
 		e.preventDefault();
+
+		// Remove spaces from phone number before validation and submission
+		const cleanPhone = userData.phone.replace(/\s+/g, '');
+
+		if (!cleanPhone || !isValidPhoneNumber(cleanPhone)) {
+			showMessage('Please enter a valid phone number', 'error');
+			return;
+		}
+
 		setLoading(true);
 
 		try {
@@ -100,7 +112,11 @@ function ProfileSettings() {
 					'Content-Type': 'application/json',
 					Authorization: `Bearer ${localStorage.getItem('token')}`,
 				},
-				body: JSON.stringify(userData),
+				// Send cleaned phone number to backend
+				body: JSON.stringify({
+					...userData,
+					phone: cleanPhone,
+				}),
 			});
 
 			const data = await response.json();
@@ -108,7 +124,10 @@ function ProfileSettings() {
 			if (response.ok) {
 				showMessage('Profile updated successfully', 'success');
 				const user = JSON.parse(localStorage.getItem('user'));
-				localStorage.setItem('user', JSON.stringify({ ...user, ...userData }));
+				localStorage.setItem(
+					'user',
+					JSON.stringify({ ...user, ...userData, phone: cleanPhone })
+				);
 			} else {
 				showMessage(data.message || 'Error updating profile', 'error');
 			}
@@ -256,7 +275,11 @@ function ProfileSettings() {
 								onChange={(e) =>
 									setUserData({ ...userData, phone: e.target.value })
 								}
+								error={!!phoneError}
+								helperText={phoneError}
 								disabled={loading}
+								required
+								placeholder="+60123456789"
 							/>
 						</Grid>
 						<Grid item xs={12}>
