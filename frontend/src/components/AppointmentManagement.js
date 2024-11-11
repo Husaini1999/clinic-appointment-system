@@ -153,20 +153,29 @@ const CollapsibleNotesCell = ({ notes }) => {
 				borderLeft: 'none',
 				padding: '8px',
 				verticalAlign: 'middle',
-				textAlign: 'center',
+				textAlign: notes?.length === 0 ? 'center' : 'left',
+				color: notes?.length === 0 ? 'text.secondary' : 'inherit',
 			}}
 		>
-			<Box sx={{ position: 'relative' }}>
+			{notes?.length === 0 ? (
+				'No notes available'
+			) : (
 				<Box
 					sx={{
-						maxHeight: isExpanded ? 'none' : '60px',
-						overflow: 'hidden',
-						transition: 'max-height 0.3s ease-in-out',
+						position: 'relative',
+						textAlign: 'left',
 					}}
 				>
-					<NotesHistory notes={notes} />
-				</Box>
-				{notes?.length > 0 && (
+					<Box
+						sx={{
+							maxHeight: isExpanded ? 'none' : '60px',
+							overflow: 'hidden',
+							transition: 'max-height 0.3s ease-in-out',
+							textAlign: 'left',
+						}}
+					>
+						<NotesHistory notes={notes} />
+					</Box>
 					<IconButton
 						size="small"
 						onClick={() => setIsExpanded(!isExpanded)}
@@ -181,8 +190,8 @@ const CollapsibleNotesCell = ({ notes }) => {
 					>
 						{isExpanded ? <KeyboardArrowUpIcon /> : <KeyboardArrowDownIcon />}
 					</IconButton>
-				)}
-			</Box>
+				</Box>
+			)}
 		</TableCell>
 	);
 };
@@ -540,7 +549,7 @@ function AppointmentManagement({ appointments, onRefresh }) {
 									width={headCell.width}
 									sx={{
 										whiteSpace: 'nowrap',
-										textAlign: headCell.id === 'actions' ? 'center' : 'left',
+										textAlign: 'center',
 									}}
 								>
 									{headCell.sortable !== false ? (

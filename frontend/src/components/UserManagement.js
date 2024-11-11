@@ -233,10 +233,26 @@ function UserManagement() {
 									Name
 								</TableSortLabel>
 							</TableCell>
-							<TableCell width="30%">Email</TableCell>
-							<TableCell width="15%">Phone</TableCell>
-							<TableCell width="15%">Role</TableCell>
-							<TableCell width="15%">Actions</TableCell>
+							<TableCell width="25%">Email</TableCell>
+							<TableCell width="20%">Phone</TableCell>
+							<TableCell
+								width="15%"
+								sx={{
+									textAlign: 'center',
+									verticalAlign: 'middle',
+								}}
+							>
+								Role
+							</TableCell>
+							<TableCell
+								width="15%"
+								sx={{
+									textAlign: 'center',
+									verticalAlign: 'middle',
+								}}
+							>
+								Actions
+							</TableCell>
 						</TableRow>
 					</TableHead>
 					<TableBody>
@@ -245,7 +261,9 @@ function UserManagement() {
 								<TableCell>{user.name}</TableCell>
 								<TableCell>{user.email}</TableCell>
 								<TableCell>{user.phone}</TableCell>
-								<TableCell>
+								<TableCell
+									sx={{ textAlign: 'center', verticalAlign: 'middle' }}
+								>
 									<Chip
 										label={
 											user.role?.charAt(0).toUpperCase() + user.role?.slice(1)
@@ -255,7 +273,9 @@ function UserManagement() {
 										sx={{ minWidth: '80px' }}
 									/>
 								</TableCell>
-								<TableCell>
+								<TableCell
+									sx={{ textAlign: 'center', verticalAlign: 'middle' }}
+								>
 									{canChangeUserRole(user) && (
 										<Button
 											variant="contained"
