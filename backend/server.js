@@ -43,9 +43,10 @@ const connectDB = async () => {
 connectDB();
 
 // Routes
-app.use('/api/auth', require('./routes/auth'));
-app.use('/api/appointments', require('./routes/appointments'));
-app.use('/api/openai', require('./routes/openai'));
+app.use('/api/auth', require('./routes/authRoutes'));
+app.use('/api/appointments', require('./routes/appointmentRoutes'));
+app.use('/api/openai', require('./routes/openaiRoutes'));
+app.use('/api/users', require('./routes/userRoutes'));
 
 // Error handling middleware
 app.use((err, req, res, next) => {

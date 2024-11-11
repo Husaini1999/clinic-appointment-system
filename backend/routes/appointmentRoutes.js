@@ -99,4 +99,49 @@ router.get('/filter', async (req, res) => {
 	}
 });
 
+// Update appointment status
+router.put('/:id/status', authMiddleware, async (req, res) => {
+	try {
+		const { id } = req.params;
+		const { status, notes } = req.body;
+
+		// Validate status
+		const validStatuses = ['pending', 'approved', 'rejected', 'cancelled'];
+		if (!validStatuses.includes(status)) {
+			return res.status(400).json({ message: 'Invalid status' });
+		}
+
+		// Find and update the appointment
+		const appointment = await Appointment.findById(id);
+
+		if (!appointment) {
+			return res.status(404).json({ message: 'Appointment not found' });
+		}
+
+		// Update the appointment
+		appointment.status = status;
+		appointment.notes = notes;
+
+		// If status is rejected, notes are required
+		if (status === 'rejected' && !notes) {
+			return res.status(400).json({
+				message: 'Notes are required when rejecting an appointment',
+			});
+		}
+
+		await appointment.save();
+
+		// Optional: Send email notification to patient
+		// You can implement this later if needed
+
+		res.status(200).json({
+			message: 'Appointment status updated successfully',
+			appointment,
+		});
+	} catch (error) {
+		console.error('Error updating appointment status:', error);
+		res.status(500).json({ message: 'Error updating appointment status' });
+	}
+});
+
 module.exports = router;

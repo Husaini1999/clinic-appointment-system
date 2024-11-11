@@ -9,10 +9,7 @@ import {
 	Box,
 	Card,
 	CardContent,
-	TextField,
-	InputAdornment,
 } from '@mui/material';
-import SearchIcon from '@mui/icons-material/Search';
 import PendingActionsIcon from '@mui/icons-material/PendingActions';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import CancelIcon from '@mui/icons-material/Cancel';
@@ -31,7 +28,6 @@ function TabPanel({ children, value, index }) {
 function StaffDashboard() {
 	const [activeTab, setActiveTab] = useState(0);
 	const [appointments, setAppointments] = useState([]);
-	const [searchTerm, setSearchTerm] = useState('');
 	const [stats, setStats] = useState({
 		pending: 0,
 		approved: 0,
@@ -48,14 +44,18 @@ function StaffDashboard() {
 			});
 			if (response.ok) {
 				const data = await response.json();
-				setAppointments(data);
+				const sortedData = [...data].sort((a, b) =>
+					a.patientName.localeCompare(b.patientName)
+				);
+				setAppointments(sortedData);
 
-				// Calculate stats
 				setStats({
-					pending: data.filter((apt) => apt.status === 'pending').length,
-					approved: data.filter((apt) => apt.status === 'approved').length,
-					rejected: data.filter((apt) => apt.status === 'rejected').length,
-					totalPatients: new Set(data.map((apt) => apt.email)).size,
+					pending: sortedData.filter((apt) => apt.status === 'pending').length,
+					approved: sortedData.filter((apt) => apt.status === 'approved')
+						.length,
+					rejected: sortedData.filter((apt) => apt.status === 'rejected')
+						.length,
+					totalPatients: new Set(sortedData.map((apt) => apt.email)).size,
 				});
 			}
 		} catch (error) {
@@ -129,23 +129,6 @@ function StaffDashboard() {
 				</Grid>
 			</Grid>
 
-			{/* Search Bar */}
-			<TextField
-				fullWidth
-				variant="outlined"
-				placeholder="Search appointments by patient name, email, or treatment..."
-				value={searchTerm}
-				onChange={(e) => setSearchTerm(e.target.value)}
-				sx={{ mb: 4 }}
-				InputProps={{
-					startAdornment: (
-						<InputAdornment position="start">
-							<SearchIcon />
-						</InputAdornment>
-					),
-				}}
-			/>
-
 			{/* Tabs Section */}
 			<Paper sx={{ width: '100%', mb: 2 }}>
 				<Tabs
@@ -160,14 +143,7 @@ function StaffDashboard() {
 
 			<TabPanel value={activeTab} index={0}>
 				<AppointmentManagement
-					appointments={appointments.filter(
-						(apt) =>
-							apt.patientName
-								.toLowerCase()
-								.includes(searchTerm.toLowerCase()) ||
-							apt.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-							apt.treatment.toLowerCase().includes(searchTerm.toLowerCase())
-					)}
+					appointments={appointments}
 					onRefresh={fetchAppointments}
 				/>
 			</TabPanel>

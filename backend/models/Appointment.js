@@ -45,10 +45,21 @@ const AppointmentSchema = new mongoose.Schema({
 		type: Date,
 		default: Date.now,
 	},
+	// Add updatedAt field to track when status changes
+	updatedAt: {
+		type: Date,
+		default: Date.now,
+	},
 });
 
-// Index for querying appointments by date
-AppointmentSchema.index({ appointmentTime: 1 });
+// Update the updatedAt field before saving
+AppointmentSchema.pre('save', function (next) {
+	this.updatedAt = new Date();
+	next();
+});
+
+// Index for querying appointments by date and status
+AppointmentSchema.index({ appointmentTime: 1, status: 1 });
 
 // Middleware to check for appointment conflicts
 AppointmentSchema.pre('save', async function (next) {
