@@ -1,36 +1,8 @@
 const express = require('express');
 const router = express.Router();
 const Appointment = require('../models/Appointment');
+const User = require('../models/User');
 const authMiddleware = require('../middleware/auth');
-
-// Middleware to protect the routes
-router.use(authMiddleware);
-
-// Get all appointments for staff to view
-router.get('/', async (req, res) => {
-	try {
-		const allAppointments = await Appointment.find();
-
-		res.status(200).json(allAppointments);
-	} catch (error) {
-		console.error('Error fetching all appointments:', error);
-		res.status(500).json({ message: 'Error fetching appointments' });
-	}
-});
-
-// Get appointments for the authenticated patient
-router.get('/patient', async (req, res) => {
-	try {
-		const patientAppointments = await Appointment.find({
-			email: req.user.email,
-		});
-
-		res.status(200).json(patientAppointments);
-	} catch (error) {
-		console.error('Error fetching patient appointments:', error);
-		res.status(500).json({ message: 'Error fetching appointments' });
-	}
-});
 
 // Public appointment booking endpoint
 router.post('/create', async (req, res) => {
@@ -56,6 +28,13 @@ router.post('/create', async (req, res) => {
 				.json({ message: 'This time slot is already booked' });
 		}
 
+		// Update user's phone number if they are logged in
+		const user = await User.findOne({ email });
+		if (user && (!user.phone || user.phone !== phone)) {
+			user.phone = phone;
+			await user.save();
+		}
+
 		// Create new appointment
 		const newAppointment = new Appointment({
 			patientName: name,
@@ -76,6 +55,35 @@ router.post('/create', async (req, res) => {
 	} catch (error) {
 		console.error('Appointment booking error:', error);
 		res.status(500).json({ message: 'Error booking appointment' });
+	}
+});
+
+// Middleware to protect the routes
+router.use(authMiddleware);
+
+// Get all appointments for staff to view
+router.get('/', async (req, res) => {
+	try {
+		const allAppointments = await Appointment.find();
+
+		res.status(200).json(allAppointments);
+	} catch (error) {
+		console.error('Error fetching all appointments:', error);
+		res.status(500).json({ message: 'Error fetching appointments' });
+	}
+});
+
+// Get appointments for the authenticated patient
+router.get('/patient', async (req, res) => {
+	try {
+		const { email } = req.query;
+		const patientAppointments = await Appointment.find({
+			email: email,
+		});
+		res.status(200).json(patientAppointments);
+	} catch (error) {
+		console.error('Error fetching patient appointments:', error);
+		res.status(500).json({ message: 'Error fetching appointments' });
 	}
 });
 

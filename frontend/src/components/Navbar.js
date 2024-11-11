@@ -1,14 +1,15 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Button, Box } from '@mui/material';
 import { useNavigate, useLocation } from 'react-router-dom';
-import AccountCircleIcon from '@mui/icons-material/AccountCircle';
 import DashboardIcon from '@mui/icons-material/Dashboard';
 import CalendarTodayIcon from '@mui/icons-material/CalendarToday';
+import BookingModal from './Booking'; // Import the BookingModal component
 
 function Navbar() {
 	const navigate = useNavigate();
 	const location = useLocation();
 	const user = JSON.parse(localStorage.getItem('user'));
+	const [openBooking, setOpenBooking] = useState(false); // State to manage modal open/close
 
 	const handleNavigation = (path) => {
 		if (path.startsWith('/#')) {
@@ -27,6 +28,14 @@ function Navbar() {
 		localStorage.removeItem('token');
 		localStorage.removeItem('user');
 		navigate('/');
+	};
+
+	const handleOpenBooking = () => {
+		setOpenBooking(true); // Open the booking modal
+	};
+
+	const handleCloseBooking = () => {
+		setOpenBooking(false); // Close the booking modal
 	};
 
 	// Define navigation items
@@ -89,21 +98,23 @@ function Navbar() {
 							<DashboardIcon sx={{ mr: 1 }} />
 							Dashboard
 						</Button>
-						<Button
-							color="primary"
-							onClick={() => handleNavigation('/booking')}
-							sx={{
-								fontWeight: 500,
-								px: 1,
-								color: 'text.primary',
-								'&:hover': {
-									backgroundColor: 'rgba(0,0,0,0.05)',
-								},
-							}}
-						>
-							<CalendarTodayIcon sx={{ mr: 1 }} />
-							Book Appointment
-						</Button>
+						{user.role === 'patient' && (
+							<Button
+								color="primary"
+								onClick={handleOpenBooking} // Open the booking modal
+								sx={{
+									fontWeight: 500,
+									px: 1,
+									color: 'text.primary',
+									'&:hover': {
+										backgroundColor: 'rgba(0,0,0,0.05)',
+									},
+								}}
+							>
+								<CalendarTodayIcon sx={{ mr: 1 }} />
+								Book Appointment
+							</Button>
+						)}
 					</Box>
 					<Button
 						color="secondary"
@@ -122,6 +133,8 @@ function Navbar() {
 					>
 						Logout
 					</Button>
+					<BookingModal open={openBooking} onClose={handleCloseBooking} />{' '}
+					{/* Render the modal */}
 				</>
 			) : (
 				// Public navigation

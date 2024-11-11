@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
 	Dialog,
 	DialogTitle,
@@ -19,7 +19,6 @@ import {
 	IconButton,
 	useTheme,
 	useMediaQuery,
-	Tooltip,
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
@@ -45,6 +44,37 @@ function BookingModal({ open, onClose }) {
 	const [success, setSuccess] = useState('');
 	const [emailError, setEmailError] = useState('');
 	const [phoneError, setPhoneError] = useState('');
+	const [loading, setLoading] = useState(true);
+
+	useEffect(() => {
+		const fetchUserDetails = async () => {
+			if (open && localStorage.getItem('token')) {
+				try {
+					const response = await fetch('/api/auth/user-details', {
+						headers: {
+							Authorization: `Bearer ${localStorage.getItem('token')}`,
+						},
+					});
+
+					if (response.ok) {
+						const userData = await response.json();
+						setFormData((prevData) => ({
+							...prevData,
+							name: userData.name || '',
+							email: userData.email || '',
+							phone: userData.phone || '',
+						}));
+					}
+				} catch (error) {
+					console.error('Error fetching user details:', error);
+				} finally {
+					setLoading(false);
+				}
+			}
+		};
+
+		fetchUserDetails();
+	}, [open]);
 
 	const steps = [
 		'Personal Details',
@@ -113,6 +143,7 @@ function BookingModal({ open, onClose }) {
 				);
 			}
 		}
+		console.log(slots);
 		return slots;
 	};
 
@@ -126,7 +157,25 @@ function BookingModal({ open, onClose }) {
 		}
 
 		try {
-			const response = await fetch('/api/appointments/public', {
+			// First, update the user's phone number if they're logged in
+			const token = localStorage.getItem('token');
+			if (token) {
+				const updateResponse = await fetch('/api/auth/update-user', {
+					method: 'PUT',
+					headers: {
+						'Content-Type': 'application/json',
+						Authorization: `Bearer ${token}`,
+					},
+					body: JSON.stringify({ phone: formData.phone }),
+				});
+
+				if (!updateResponse.ok) {
+					throw new Error('Failed to update user details');
+				}
+			}
+
+			// Then create the appointment
+			const response = await fetch('/api/appointments/create', {
 				method: 'POST',
 				headers: {
 					'Content-Type': 'application/json',
@@ -140,6 +189,7 @@ function BookingModal({ open, onClose }) {
 				setSuccess(
 					'Appointment booked successfully! We will send a confirmation email shortly.'
 				);
+
 				setTimeout(() => {
 					onClose();
 					setFormData({
@@ -151,11 +201,14 @@ function BookingModal({ open, onClose }) {
 						phone: '',
 					});
 					setActiveStep(0);
-				}, 3000);
+					setSuccess('');
+					setError('');
+				}, 1000);
 			} else {
 				setError(data.message);
 			}
 		} catch (err) {
+			console.error('Error:', err);
 			setError('An error occurred. Please try again.');
 		}
 	};
@@ -208,25 +261,46 @@ function BookingModal({ open, onClose }) {
 								setFormData({ ...formData, name: e.target.value })
 							}
 							required
+							disabled={!!formData.name && localStorage.getItem('token')}
+							sx={{
+								'& .MuiInputBase-input.Mui-disabled': {
+									bgcolor: 'rgba(0, 0, 0, 0.05)',
+									WebkitTextFillColor: 'rgba(0, 0, 0, 0.6)',
+								},
+							}}
 						/>
 						<TextField
 							fullWidth
 							label="Email"
 							type="email"
 							value={formData.email}
-							onChange={handleEmailChange} // Use the new handler
-							error={!!emailError} // Show error state
-							helperText={emailError} // Show error message
+							onChange={handleEmailChange}
+							error={!!emailError}
+							helperText={emailError}
 							required
+							disabled={!!formData.email && localStorage.getItem('token')}
+							sx={{
+								'& .MuiInputBase-input.Mui-disabled': {
+									bgcolor: 'rgba(0, 0, 0, 0.05)',
+									WebkitTextFillColor: 'rgba(0, 0, 0, 0.6)',
+								},
+							}}
 						/>
 						<TextField
 							fullWidth
 							label="Phone Number"
 							value={formData.phone}
-							onChange={handlePhoneChange} // Use the new handler
-							error={!!phoneError} // Show error state
-							helperText={phoneError} // Show error message
+							onChange={handlePhoneChange}
+							error={!!phoneError}
+							helperText={phoneError}
 							required
+							disabled={!!formData.phone && localStorage.getItem('token')}
+							sx={{
+								'& .MuiInputBase-input.Mui-disabled': {
+									bgcolor: 'rgba(0, 0, 0, 0.05)',
+									WebkitTextFillColor: 'rgba(0, 0, 0, 0.6)',
+								},
+							}}
 						/>
 					</Box>
 				);
@@ -301,14 +375,6 @@ function BookingModal({ open, onClose }) {
 									textField: {
 										fullWidth: true,
 										required: true,
-										error:
-											formData.appointmentTime &&
-											!isValidAppointmentTime(formData.appointmentTime),
-										helperText:
-											formData.appointmentTime &&
-											!isValidAppointmentTime(formData.appointmentTime)
-												? 'Please select a valid appointment time'
-												: '',
 									},
 								}}
 							/>
@@ -322,49 +388,40 @@ function BookingModal({ open, onClose }) {
 									Available Time Slots:
 								</Typography>
 								{getTimeSlots().map((slot) => (
-									<Tooltip
+									<Button
 										key={slot}
-										title={
-											isWeekday(formData.appointmentTime)
-												? 'Click to select this time'
-												: 'Not available on weekends'
+										size="small"
+										variant={
+											formData.appointmentTime &&
+											format(formData.appointmentTime, 'hh:mm a') === slot
+												? 'contained'
+												: 'outlined'
 										}
+										color="primary"
+										onClick={() => {
+											console.log(formData.appointmentTime);
+											if (formData.appointmentTime) {
+												const newDate = set(formData.appointmentTime, {
+													hours: parseInt(slot.split(':')[0]),
+													minutes: parseInt(slot.split(':')[1]),
+												});
+												setFormData({
+													...formData,
+													appointmentTime: newDate,
+												});
+											}
+										}}
+										disabled={
+											!formData.appointmentTime ||
+											!isWeekday(formData.appointmentTime)
+										}
+										sx={{
+											minWidth: '90px',
+											fontSize: '0.875rem',
+										}}
 									>
-										<span>
-											<Button
-												size="small"
-												variant={
-													formData.appointmentTime &&
-													format(formData.appointmentTime, 'hh:mm a') === slot
-														? 'contained'
-														: 'outlined'
-												}
-												color="primary"
-												onClick={() => {
-													if (formData.appointmentTime) {
-														const newDate = set(formData.appointmentTime, {
-															hours: parseInt(slot.split(':')[0]),
-															minutes: parseInt(slot.split(':')[1]),
-														});
-														setFormData({
-															...formData,
-															appointmentTime: newDate,
-														});
-													}
-												}}
-												disabled={
-													!formData.appointmentTime ||
-													!isWeekday(formData.appointmentTime)
-												}
-												sx={{
-													minWidth: '90px',
-													fontSize: '0.875rem',
-												}}
-											>
-												{slot}
-											</Button>
-										</span>
-									</Tooltip>
+										{slot}
+									</Button>
 								))}
 							</Box>
 						</Box>

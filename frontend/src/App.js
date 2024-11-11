@@ -12,8 +12,6 @@ import Dashboard from './components/Dashboard';
 import Booking from './components/Booking';
 import Homepage from './components/Homepage';
 import Signup from './components/Signup';
-import PatientDashboard from './components/PatientDashboard';
-import StaffDashboard from './components/StaffDashboard';
 import Layout from './components/Layout';
 
 const theme = createTheme({
@@ -125,22 +123,6 @@ function App() {
 							}
 						/>
 						<Route path="/booking" element={<Booking />} />
-						<Route
-							path="/patient-dashboard"
-							element={
-								<PrivateRoute role="patient">
-									<PatientDashboard />
-								</PrivateRoute>
-							}
-						/>
-						<Route
-							path="/staff-dashboard"
-							element={
-								<PrivateRoute role="staff">
-									<StaffDashboard />
-								</PrivateRoute>
-							}
-						/>
 					</Routes>
 				</Layout>
 			</Router>

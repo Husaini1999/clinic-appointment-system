@@ -42,15 +42,21 @@ function Login() {
 			setError('Please fill in all fields.');
 			return;
 		}
-		setLoading(true); // Set loading to true
+		setLoading(true);
 		try {
+			const controller = new AbortController();
+			const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+
 			const response = await fetch('/api/auth/login', {
 				method: 'POST',
 				headers: {
 					'Content-Type': 'application/json',
 				},
 				body: JSON.stringify(formData),
+				signal: controller.signal,
 			});
+
+			clearTimeout(timeoutId);
 
 			const data = await response.json();
 
@@ -60,11 +66,10 @@ function Login() {
 				setSuccessMessage('Login successful! Welcome back.');
 				setSnackbarOpen(true);
 
-				// Delay navigation to allow snackbar to show
 				setTimeout(() => {
-					setLoading(false); // Set loading to false before navigating
+					setLoading(false);
 					navigate('/dashboard');
-				}, 3000); // Wait for 3 seconds before navigating
+				}, 3000);
 
 				if (data.user.role === 'patient') {
 					// Redirect to patient dashboard
@@ -73,11 +78,15 @@ function Login() {
 				}
 			} else {
 				setError(data.message);
-				setLoading(false); // Set loading to false on error
+				setLoading(false);
 			}
 		} catch (err) {
-			setError('An error occurred. Please try again.');
-			setLoading(false); // Set loading to false on error
+			if (err.name === 'AbortError') {
+				setError('Request timed out. Please try again.');
+			} else {
+				setError('An error occurred. Please try again.');
+			}
+			setLoading(false);
 		}
 	};
 

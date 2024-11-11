@@ -3,6 +3,7 @@ const router = express.Router();
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
+const authMiddleware = require('../middleware/auth');
 
 // Signup route
 router.post('/signup', async (req, res) => {
@@ -38,28 +39,103 @@ router.post('/login', async (req, res) => {
 	const { email, password } = req.body;
 
 	try {
+		// Input validation
+		if (!email || !password) {
+			return res
+				.status(400)
+				.json({ message: 'Please provide both email and password' });
+		}
+
 		// Check if user exists
-		const user = await User.findOne({ email });
+		const user = await User.findOne({ email }).select('+password'); // Explicitly select password
 		if (!user) {
-			return res.status(400).json({ message: 'Invalid credentials' });
+			return res.status(401).json({ message: 'Invalid credentials' });
 		}
 
 		// Check password
 		const isMatch = await user.matchPassword(password);
 		if (!isMatch) {
-			return res.status(400).json({ message: 'Invalid credentials' });
+			return res.status(401).json({ message: 'Invalid credentials' });
 		}
 
-		// Create and return JWT
-		const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
-			expiresIn: '1h',
-		});
+		// Create JWT token
+		const token = jwt.sign(
+			{
+				id: user._id,
+				email: user.email,
+				role: user.role,
+			},
+			process.env.JWT_SECRET,
+			{ expiresIn: '1h' }
+		);
+
+		// Return success response
 		res.json({
+			success: true,
 			token,
-			user: { id: user._id, name: user.name, email: user.email },
+			user: {
+				id: user._id,
+				name: user.name,
+				email: user.email,
+				role: user.role,
+			},
 		});
 	} catch (error) {
 		console.error('Login error:', error);
+		res.status(500).json({
+			success: false,
+			message: 'An error occurred during login. Please try again.',
+		});
+	}
+});
+
+// Add this new route
+router.get('/user-details', authMiddleware, async (req, res) => {
+	try {
+		const user = await User.findById(req.user.id).select('-password');
+		res.json(user);
+	} catch (error) {
+		console.error('Error fetching user details:', error);
+		res.status(500).json({ message: 'Server error' });
+	}
+});
+
+// Add flexible endpoint to update user details
+router.put('/update-user', authMiddleware, async (req, res) => {
+	try {
+		const updateFields = req.body;
+
+		// Remove sensitive fields that shouldn't be updated directly
+		delete updateFields.password;
+		delete updateFields._id;
+		delete updateFields.role;
+		delete updateFields.createdAt;
+
+		const user = await User.findById(req.user.id);
+
+		if (!user) {
+			return res.status(404).json({ message: 'User not found' });
+		}
+
+		// Update all provided fields
+		Object.keys(updateFields).forEach((field) => {
+			if (updateFields[field] !== undefined) {
+				user[field] = updateFields[field];
+			}
+		});
+
+		await user.save();
+
+		// Return user without password
+		const updatedUser = user.toObject();
+		delete updatedUser.password;
+
+		res.json({
+			message: 'User updated successfully',
+			user: updatedUser,
+		});
+	} catch (error) {
+		console.error('Error updating user details:', error);
 		res.status(500).json({ message: 'Server error' });
 	}
 });
