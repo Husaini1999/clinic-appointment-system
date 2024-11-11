@@ -1,6 +1,6 @@
 import React from 'react';
 import { Navigate } from 'react-router-dom';
-import { CircularProgress, Container } from '@mui/material';
+import { Container } from '@mui/material';
 import PatientDashboard from './PatientDashboard';
 import StaffDashboard from './StaffDashboard';
 
@@ -26,7 +26,11 @@ function Dashboard() {
 		// Render appropriate dashboard based on user role
 		return (
 			<Container>
-				{user.role === 'staff' ? <StaffDashboard /> : <PatientDashboard />}
+				{user.role === 'staff' || user.role === 'admin' ? (
+					<StaffDashboard />
+				) : (
+					<PatientDashboard />
+				)}
 			</Container>
 		);
 	} catch (error) {

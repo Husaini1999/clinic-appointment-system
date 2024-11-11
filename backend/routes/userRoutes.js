@@ -3,11 +3,11 @@ const router = express.Router();
 const auth = require('../middleware/auth');
 const User = require('../models/User');
 
-// Get all users (staff only)
+// Get all users (admin/staff only)
 router.get('/', auth, async (req, res) => {
 	try {
 		// Check if requesting user is staff
-		if (req.user.role !== 'staff') {
+		if (!['staff', 'admin'].includes(req.user.role)) {
 			return res.status(403).json({ message: 'Access denied' });
 		}
 
@@ -23,7 +23,7 @@ router.get('/:id', auth, async (req, res) => {
 	try {
 		// Check if user is requesting their own info or is staff
 		if (
-			req.user.role !== 'staff' &&
+			!['staff', 'admin'].includes(req.user.role) &&
 			req.user._id.toString() !== req.params.id
 		) {
 			return res.status(403).json({ message: 'Access denied' });
@@ -41,20 +41,25 @@ router.get('/:id', auth, async (req, res) => {
 });
 
 // Update user role (staff only)
-router.put('/:id/role', auth, async (req, res) => {
+router.put('/:userId/role', auth, async (req, res) => {
 	try {
-		// Check if requesting user is staff
-		if (req.user.role !== 'staff') {
-			return res.status(403).json({ message: 'Access denied' });
+		const requestingUser = req.user; // From auth middleware
+		const { role } = req.body;
+
+		// Only admins can change roles
+		if (requestingUser.role !== 'admin') {
+			return res
+				.status(403)
+				.json({ message: 'Unauthorized to change user roles' });
 		}
 
-		const { role } = req.body;
-		if (!['patient', 'staff'].includes(role)) {
-			return res.status(400).json({ message: 'Invalid role' });
+		// Validate role is one of allowed values
+		if (!['admin', 'staff', 'patient'].includes(role)) {
+			return res.status(400).json({ message: 'Invalid role specified' });
 		}
 
 		const user = await User.findByIdAndUpdate(
-			req.params.id,
+			req.params.userId,
 			{ role },
 			{ new: true }
 		).select('-password');
@@ -65,7 +70,8 @@ router.put('/:id/role', auth, async (req, res) => {
 
 		res.json(user);
 	} catch (error) {
-		res.status(500).json({ message: 'Server error' });
+		console.error('Error updating user role:', error);
+		res.status(500).json({ message: 'Error updating user role' });
 	}
 });
 

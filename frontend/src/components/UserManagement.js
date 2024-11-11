@@ -9,7 +9,6 @@ import {
 	TableRow,
 	Button,
 	Typography,
-	Box,
 	Select,
 	MenuItem,
 	Dialog,
@@ -36,6 +35,8 @@ function UserManagement() {
 	const [order, setOrder] = useState('asc');
 	const [confirmationOpen, setConfirmationOpen] = useState(false);
 	const [newRole, setNewRole] = useState('');
+	const currentUser = JSON.parse(localStorage.getItem('user')); // Get current user
+	const isAdmin = currentUser?.role?.toUpperCase() === 'ADMIN';
 
 	useEffect(() => {
 		fetchUsers();
@@ -150,7 +151,11 @@ function UserManagement() {
 
 	// Get role chip color
 	const getRoleColor = (role) => {
-		switch (role) {
+		if (!role) return 'default'; // Handle undefined/null roles
+
+		switch (role.toLowerCase()) {
+			case 'admin':
+				return 'error';
 			case 'staff':
 				return 'primary';
 			case 'patient':
@@ -158,6 +163,16 @@ function UserManagement() {
 			default:
 				return 'default';
 		}
+	};
+
+	// Add this function to check if user can be edited
+	const canChangeUserRole = (user) => {
+		// Admin can't change their own role
+		if (user.email === currentUser.email) {
+			return false;
+		}
+		// Only admins can change roles
+		return isAdmin;
 	};
 
 	return (
@@ -209,23 +224,25 @@ function UserManagement() {
 								<TableCell>
 									<Chip
 										label={
-											user.role.charAt(0).toUpperCase() + user.role.slice(1)
+											user.role?.charAt(0).toUpperCase() + user.role?.slice(1)
 										}
 										color={getRoleColor(user.role)}
 										size="small"
 									/>
 								</TableCell>
 								<TableCell>
-									<Button
-										variant="contained"
-										size="small"
-										onClick={() => {
-											setSelectedUser(user);
-											setOpen(true);
-										}}
-									>
-										Change Role
-									</Button>
+									{canChangeUserRole(user) && (
+										<Button
+											variant="contained"
+											size="small"
+											onClick={() => {
+												setSelectedUser(user);
+												setOpen(true);
+											}}
+										>
+											Change Role
+										</Button>
+									)}
 								</TableCell>
 							</TableRow>
 						))}
@@ -246,7 +263,7 @@ function UserManagement() {
 				/>
 			</TableContainer>
 
-			{/* Role Change Modal */}
+			{/* Update Role Change Modal */}
 			<Dialog open={open} onClose={() => setOpen(false)}>
 				<DialogTitle>Change User Role</DialogTitle>
 				<DialogContent sx={{ minWidth: 300, mt: 2 }}>
@@ -260,6 +277,7 @@ function UserManagement() {
 					>
 						<MenuItem value="patient">Patient</MenuItem>
 						<MenuItem value="staff">Staff</MenuItem>
+						<MenuItem value="admin">Admin</MenuItem>
 					</Select>
 				</DialogContent>
 				<DialogActions>
@@ -267,7 +285,7 @@ function UserManagement() {
 				</DialogActions>
 			</Dialog>
 
-			{/* Confirmation Modal */}
+			{/* Update Confirmation Modal */}
 			<Dialog
 				open={confirmationOpen}
 				onClose={() => setConfirmationOpen(false)}
@@ -279,8 +297,8 @@ function UserManagement() {
 						from{' '}
 						<Chip
 							label={
-								selectedUser?.role.charAt(0).toUpperCase() +
-								selectedUser?.role.slice(1)
+								selectedUser?.role?.charAt(0)?.toUpperCase() +
+								selectedUser?.role?.slice(1)
 							}
 							color={getRoleColor(selectedUser?.role)}
 							size="small"
@@ -288,14 +306,20 @@ function UserManagement() {
 						/>
 						to{' '}
 						<Chip
-							label={newRole.charAt(0).toUpperCase() + newRole.slice(1)}
+							label={newRole?.charAt(0)?.toUpperCase() + newRole?.slice(1)}
 							color={getRoleColor(newRole)}
 							size="small"
 							sx={{ mx: 1 }}
 						/>
 						?
 					</Typography>
-					<Typography variant="body2" color="warning.main">
+					{newRole === 'admin' && (
+						<Typography variant="body2" color="error" sx={{ mt: 2 }}>
+							Warning: Granting admin privileges will give this user full access
+							to all system features.
+						</Typography>
+					)}
+					<Typography variant="body2" color="warning.main" sx={{ mt: 2 }}>
 						This action will change the user's permissions and access level.
 					</Typography>
 				</DialogContent>

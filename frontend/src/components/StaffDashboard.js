@@ -16,6 +16,7 @@ import CancelIcon from '@mui/icons-material/Cancel';
 import PeopleIcon from '@mui/icons-material/People';
 import AppointmentManagement from './AppointmentManagement';
 import UserManagement from './UserManagement';
+import { canViewAnalytics } from '../utils/roleUtils';
 
 function TabPanel({ children, value, index }) {
 	return (
@@ -34,6 +35,9 @@ function StaffDashboard() {
 		rejected: 0,
 		totalPatients: 0,
 	});
+
+	const user = JSON.parse(localStorage.getItem('user'));
+	const showAnalytics = canViewAnalytics(user.role);
 
 	const fetchAppointments = useCallback(async () => {
 		try {
@@ -93,43 +97,44 @@ function StaffDashboard() {
 
 	return (
 		<Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
-			{/* Statistics Section */}
-			<Grid container spacing={3} sx={{ mb: 4 }}>
-				<Grid item xs={12} sm={6} md={3}>
-					<StatCard
-						title="Pending Appointments"
-						value={stats.pending}
-						icon={<PendingActionsIcon sx={{ fontSize: 40 }} />}
-						color="warning.main"
-					/>
+			{/* Only show statistics for admin */}
+			{showAnalytics && (
+				<Grid container spacing={3} sx={{ mb: 4 }}>
+					<Grid item xs={12} sm={6} md={3}>
+						<StatCard
+							title="Pending Appointments"
+							value={stats.pending}
+							icon={<PendingActionsIcon sx={{ fontSize: 40 }} />}
+							color="warning.main"
+						/>
+					</Grid>
+					<Grid item xs={12} sm={6} md={3}>
+						<StatCard
+							title="Approved Appointments"
+							value={stats.approved}
+							icon={<CheckCircleIcon sx={{ fontSize: 40 }} />}
+							color="success.main"
+						/>
+					</Grid>
+					<Grid item xs={12} sm={6} md={3}>
+						<StatCard
+							title="Rejected Appointments"
+							value={stats.rejected}
+							icon={<CancelIcon sx={{ fontSize: 40 }} />}
+							color="error.main"
+						/>
+					</Grid>
+					<Grid item xs={12} sm={6} md={3}>
+						<StatCard
+							title="Total Patients"
+							value={stats.totalPatients}
+							icon={<PeopleIcon sx={{ fontSize: 40 }} />}
+							color="primary.main"
+						/>
+					</Grid>
 				</Grid>
-				<Grid item xs={12} sm={6} md={3}>
-					<StatCard
-						title="Approved Appointments"
-						value={stats.approved}
-						icon={<CheckCircleIcon sx={{ fontSize: 40 }} />}
-						color="success.main"
-					/>
-				</Grid>
-				<Grid item xs={12} sm={6} md={3}>
-					<StatCard
-						title="Rejected Appointments"
-						value={stats.rejected}
-						icon={<CancelIcon sx={{ fontSize: 40 }} />}
-						color="error.main"
-					/>
-				</Grid>
-				<Grid item xs={12} sm={6} md={3}>
-					<StatCard
-						title="Total Patients"
-						value={stats.totalPatients}
-						icon={<PeopleIcon sx={{ fontSize: 40 }} />}
-						color="primary.main"
-					/>
-				</Grid>
-			</Grid>
+			)}
 
-			{/* Tabs Section */}
 			<Paper sx={{ width: '100%', mb: 2 }}>
 				<Tabs
 					value={activeTab}
@@ -137,7 +142,9 @@ function StaffDashboard() {
 					sx={{ borderBottom: 1, borderColor: 'divider' }}
 				>
 					<Tab label="Appointments" />
-					<Tab label="User Management" />
+					{user.role?.toUpperCase() === 'ADMIN' && (
+						<Tab label="User Management" />
+					)}
 				</Tabs>
 			</Paper>
 
