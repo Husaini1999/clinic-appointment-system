@@ -1,12 +1,30 @@
 import React, { useState } from 'react';
-import { Button, Box } from '@mui/material';
+import {
+	Button,
+	Box,
+	Drawer,
+	List,
+	ListItem,
+	ListItemIcon,
+	ListItemText,
+	Divider,
+	useTheme,
+	useMediaQuery,
+} from '@mui/material';
+import HomeIcon from '@mui/icons-material/Home';
+import InfoIcon from '@mui/icons-material/Info';
+import MedicalServicesIcon from '@mui/icons-material/MedicalServices';
+import ContactMailIcon from '@mui/icons-material/ContactMail';
 import { useNavigate, useLocation } from 'react-router-dom';
 import DashboardIcon from '@mui/icons-material/Dashboard';
 import CalendarTodayIcon from '@mui/icons-material/CalendarToday';
 import AccountCircleIcon from '@mui/icons-material/AccountCircle';
+import ExitToAppIcon from '@mui/icons-material/ExitToApp';
 import BookingModal from './Booking'; // Import the BookingModal component
 
-function Navbar() {
+function Navbar({ mobileOpen, onMobileClose }) {
+	const theme = useTheme();
+	const isMobile = useMediaQuery(theme.breakpoints.down('md'));
 	const navigate = useNavigate();
 	const location = useLocation();
 	const user = JSON.parse(localStorage.getItem('user'));
@@ -47,6 +65,128 @@ function Navbar() {
 		{ label: 'Contact', path: '/#contact' },
 	];
 
+	const drawer = (
+		<Box sx={{ width: 250, pt: 2 }}>
+			<List>
+				{navItems.map((item) => (
+					<ListItem
+						button
+						key={item.label}
+						onClick={() => {
+							handleNavigation(item.path);
+							if (isMobile) onMobileClose();
+						}}
+					>
+						<ListItemIcon>
+							{item.label === 'Home' && <HomeIcon />}
+							{item.label === 'About Us' && <InfoIcon />}
+							{item.label === 'Services' && <MedicalServicesIcon />}
+							{item.label === 'Contact' && <ContactMailIcon />}
+						</ListItemIcon>
+						<ListItemText primary={item.label} />
+					</ListItem>
+				))}
+			</List>
+
+			<Divider />
+
+			{user ? (
+				// Logged in user menu items
+				<List>
+					<ListItem button onClick={() => handleNavigation('/dashboard')}>
+						<ListItemIcon>
+							<DashboardIcon />
+						</ListItemIcon>
+						<ListItemText primary="Dashboard" />
+					</ListItem>
+					{user.role === 'patient' && (
+						<ListItem button onClick={handleOpenBooking}>
+							<ListItemIcon>
+								<CalendarTodayIcon />
+							</ListItemIcon>
+							<ListItemText primary="Book Appointment" />
+						</ListItem>
+					)}
+					<ListItem button onClick={() => handleNavigation('/profile')}>
+						<ListItemIcon>
+							<AccountCircleIcon />
+						</ListItemIcon>
+						<ListItemText primary="Profile" />
+					</ListItem>
+					<ListItem
+						button
+						onClick={() => {
+							handleLogout();
+							onMobileClose();
+						}}
+						sx={{
+							color: 'secondary.main',
+							'&:hover': {
+								backgroundColor: 'secondary.light',
+								color: 'white',
+							},
+						}}
+					>
+						<ListItemIcon>
+							<ExitToAppIcon sx={{ color: 'inherit' }} />
+						</ListItemIcon>
+						<ListItemText primary="Logout" />
+					</ListItem>
+				</List>
+			) : (
+				// Public menu items
+				<List>
+					<ListItem
+						button
+						onClick={() => {
+							handleNavigation('/login');
+							onMobileClose();
+						}}
+						sx={{
+							color: 'secondary.main',
+							'&:hover': {
+								backgroundColor: 'secondary.light',
+								color: 'white',
+							},
+						}}
+					>
+						<ListItemIcon>
+							<AccountCircleIcon sx={{ color: 'inherit' }} />
+						</ListItemIcon>
+						<ListItemText primary="Login" />
+					</ListItem>
+				</List>
+			)}
+		</Box>
+	);
+
+	if (isMobile) {
+		return (
+			<>
+				<Drawer
+					variant="temporary"
+					anchor="left"
+					open={mobileOpen}
+					onClose={onMobileClose}
+					ModalProps={{
+						keepMounted: true, // Better open performance on mobile.
+					}}
+					sx={{
+						'& .MuiDrawer-paper': {
+							width: 250,
+							boxSizing: 'border-box',
+							backgroundColor: 'background.paper',
+						},
+					}}
+				>
+					{drawer}
+				</Drawer>
+				<BookingModal open={openBooking} onClose={handleCloseBooking} />
+			</>
+		);
+	}
+
+	// Return desktop navigation
 	return (
 		<Box
 			sx={{

@@ -30,6 +30,7 @@ import NotesHistory from './NotesHistory';
 import { enhancedTableStyles } from './styles/tableStyles';
 import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
+import { mobileResponsiveStyles } from './styles/mobileStyles';
 
 const CancelModal = React.memo(
 	({ open, onClose, onCancel, appointmentId, notes, onNotesChange }) => (
@@ -70,6 +71,7 @@ const CollapsibleNotesCell = ({ notes }) => {
 
 	return (
 		<TableCell
+			className="hide-on-mobile"
 			sx={{
 				borderRight: 'none',
 				borderLeft: 'none',
@@ -297,11 +299,37 @@ function Dashboard() {
 		pastPage
 	);
 
-	const tableContainerStyles = {
-		...enhancedTableStyles.tableContainer,
-		maxHeight: 'none', // Remove max height to prevent vertical scrolling
-		overflowX: 'hidden', // Prevent horizontal scrolling
-		marginBottom: 2,
+	const mergedTableStyles = {
+		...enhancedTableStyles.root,
+		...mobileResponsiveStyles.tableContainer,
+		width: '100%',
+		tableLayout: 'fixed',
+		'& .MuiTableCell-root': {
+			padding: {
+				xs: '8px 4px',
+				sm: '16px',
+			},
+			height: 'auto',
+			display: 'table-cell',
+			verticalAlign: 'middle',
+			textAlign: 'center',
+			wordBreak: 'break-word',
+			fontSize: {
+				xs: '0.75rem',
+				sm: '0.875rem',
+			},
+		},
+		'& .MuiTableHead-root .MuiTableCell-root': {
+			backgroundColor: (theme) => theme.palette.primary.main,
+			color: 'white',
+			fontWeight: 'bold',
+		},
+		'& .hide-on-mobile': {
+			display: {
+				xs: 'none !important',
+				sm: 'table-cell !important',
+			},
+		},
 	};
 
 	const handleUpcomingPageChange = (event, newPage) => {
@@ -319,17 +347,38 @@ function Dashboard() {
 	};
 
 	return (
-		<Container maxWidth="lg" sx={{ mt: 4 }}>
-			<Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 4 }}>
-				<Typography variant="h4" component="h1">
+		<Container
+			maxWidth="lg"
+			sx={{
+				...mobileResponsiveStyles.container,
+				mt: { xs: 2, sm: 4 },
+			}}
+		>
+			<Box
+				sx={{
+					display: 'flex',
+					flexDirection: { xs: 'column', sm: 'row' },
+					justifyContent: 'space-between',
+					mb: { xs: 2, sm: 4 },
+				}}
+			>
+				<Typography
+					variant="h4"
+					component="h1"
+					sx={mobileResponsiveStyles.typography.h4}
+				>
 					Welcome, {user.name}
 				</Typography>
 			</Box>
 
-			{/* Status Filter */}
-			<Box sx={{ mb: 3, display: 'flex', alignItems: 'center', gap: 2 }}>
+			<Box
+				sx={{
+					...mobileResponsiveStyles.filterBox,
+					mb: 3,
+				}}
+			>
 				<Typography variant="body1">Filter by Status:</Typography>
-				<Box>
+				<Box sx={mobileResponsiveStyles.chipGroup}>
 					{statusOptions.map((status) => (
 						<Chip
 							key={status}
@@ -337,14 +386,7 @@ function Dashboard() {
 							onClick={() => setStatusFilter(status)}
 							color={statusFilter === status ? 'primary' : 'default'}
 							sx={{
-								mr: 1,
-								textTransform: 'capitalize',
-								'&:hover': {
-									backgroundColor: (theme) =>
-										statusFilter === status
-											? theme.palette.primary.main
-											: theme.palette.action.hover,
-								},
+								fontSize: { xs: '0.75rem', sm: '0.875rem' },
 							}}
 						/>
 					))}
@@ -355,8 +397,17 @@ function Dashboard() {
 			<Typography variant="h5" sx={{ mb: 2 }}>
 				Upcoming Appointments
 			</Typography>
-			<TableContainer component={Paper} sx={tableContainerStyles}>
-				<Table sx={{ ...enhancedTableStyles.root, tableLayout: 'fixed' }}>
+			<TableContainer component={Paper} sx={mergedTableStyles}>
+				<Table
+					sx={{
+						...mergedTableStyles,
+						stickyHeader: true,
+						'& .MuiTableCell-root': {
+							whiteSpace: { xs: 'normal', sm: 'nowrap' },
+							padding: { xs: '8px 4px', sm: '16px' },
+						},
+					}}
+				>
 					<TableHead>
 						<TableRow>
 							<TableCell width="5%">No.</TableCell>
@@ -369,7 +420,7 @@ function Dashboard() {
 							<TableCell width="15%" align="center">
 								Status
 							</TableCell>
-							<TableCell width="25%" align="center">
+							<TableCell width="25%" align="center" className="hide-on-mobile">
 								Notes History
 							</TableCell>
 							<TableCell width="15%" align="center">
@@ -474,8 +525,17 @@ function Dashboard() {
 			<Typography variant="h5" sx={{ mb: 2, mt: 4 }}>
 				Past Appointments
 			</Typography>
-			<TableContainer component={Paper} sx={tableContainerStyles}>
-				<Table sx={{ ...enhancedTableStyles.root, tableLayout: 'fixed' }}>
+			<TableContainer component={Paper} sx={mergedTableStyles}>
+				<Table
+					sx={{
+						...mergedTableStyles,
+						stickyHeader: true,
+						'& .MuiTableCell-root': {
+							whiteSpace: { xs: 'normal', sm: 'nowrap' },
+							padding: { xs: '8px 4px', sm: '16px' },
+						},
+					}}
+				>
 					<TableHead>
 						<TableRow>
 							<TableCell width="5%">No.</TableCell>
@@ -488,7 +548,7 @@ function Dashboard() {
 							<TableCell width="15%" align="center">
 								Status
 							</TableCell>
-							<TableCell width="40%" align="center">
+							<TableCell width="40%" align="center" className="hide-on-mobile">
 								Notes History
 							</TableCell>
 						</TableRow>
@@ -514,7 +574,10 @@ function Dashboard() {
 											}}
 										/>
 									</TableCell>
-									<CollapsibleNotesCell notes={appointment.noteHistory} />
+									<CollapsibleNotesCell
+										notes={appointment.noteHistory}
+										className="hide-on-mobile"
+									/>
 								</TableRow>
 							))
 						) : (

@@ -26,6 +26,8 @@ import {
 	TablePagination,
 	IconButton,
 	Tooltip,
+	useTheme,
+	useMediaQuery,
 } from '@mui/material';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import BlockIcon from '@mui/icons-material/Block';
@@ -38,6 +40,7 @@ import ClearIcon from '@mui/icons-material/Clear';
 import { canCancelAppointments } from '../utils/roleUtils';
 import { enhancedTableStyles } from './styles/tableStyles';
 import NotesHistory from './NotesHistory';
+import { mobileResponsiveStyles } from './styles/mobileStyles';
 
 // Separate Approve Modal Component
 const ApproveModal = React.memo(
@@ -147,30 +150,34 @@ const CollapsibleNotesCell = ({ notes }) => {
 	const [isExpanded, setIsExpanded] = useState(false);
 
 	return (
-		<TableCell
+		<Box
 			sx={{
-				borderRight: 'none',
-				borderLeft: 'none',
-				padding: '8px',
-				verticalAlign: 'middle',
-				textAlign: notes?.length === 0 ? 'center' : 'left',
-				color: notes?.length === 0 ? 'text.secondary' : 'inherit',
+				position: 'relative',
+				width: '100%',
+				height: '100%',
+				maxWidth: { xs: '200px', sm: '300px' },
+				textAlign: 'left',
 			}}
 		>
 			{notes?.length === 0 ? (
-				'No notes available'
-			) : (
-				<Box
+				<Typography
+					variant="body2"
 					sx={{
-						position: 'relative',
+						color: 'text.secondary',
 						textAlign: 'left',
 					}}
 				>
+					No notes available
+				</Typography>
+			) : (
+				<>
 					<Box
 						sx={{
 							maxHeight: isExpanded ? 'none' : '60px',
 							overflow: 'hidden',
 							transition: 'max-height 0.3s ease-in-out',
+							wordBreak: 'break-word',
+							whiteSpace: 'pre-wrap',
 							textAlign: 'left',
 						}}
 					>
@@ -181,18 +188,20 @@ const CollapsibleNotesCell = ({ notes }) => {
 						onClick={() => setIsExpanded(!isExpanded)}
 						sx={{
 							position: 'absolute',
-							bottom: -8,
-							right: -8,
+							bottom: 0,
+							right: 0,
+							padding: '1px',
 							backgroundColor: 'background.paper',
 							boxShadow: 1,
 							'&:hover': { backgroundColor: 'grey.100' },
+							zIndex: 1,
 						}}
 					>
 						{isExpanded ? <KeyboardArrowUpIcon /> : <KeyboardArrowDownIcon />}
 					</IconButton>
-				</Box>
+				</>
 			)}
-		</TableCell>
+		</Box>
 	);
 };
 
@@ -213,6 +222,8 @@ function AppointmentManagement({ appointments, onRefresh }) {
 	const [rowsPerPage, setRowsPerPage] = useState(5);
 	const user = JSON.parse(localStorage.getItem('user'));
 	const canCancel = canCancelAppointments(user.role);
+	const theme = useTheme();
+	const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
 	// Get unique treatments from appointments
 	const treatments = [
@@ -331,14 +342,54 @@ function AppointmentManagement({ appointments, onRefresh }) {
 
 	// Table headers configuration
 	const headCells = [
-		{ id: 'patientName', label: 'Patient Name', width: '10%' },
-		{ id: 'email', label: 'Email', width: '12%' },
-		{ id: 'phone', label: 'Phone', width: '10%' },
-		{ id: 'treatment', label: 'Treatment', width: '12%' },
-		{ id: 'appointmentTime', label: 'Date & Time', width: '11%' },
-		{ id: 'notes', label: 'Notes History', width: '15%' },
-		{ id: 'status', label: 'Status', width: '8%' },
-		{ id: 'actions', label: 'Actions', sortable: false, width: '12%' },
+		{
+			id: 'patientName',
+			label: 'Patient Name',
+			width: { xs: '15%', sm: '15%' },
+			sortable: true,
+		},
+		{
+			id: 'email',
+			label: 'Email',
+			width: { xs: '18%', sm: '18%' },
+			hideOnMobile: true,
+			sortable: true,
+		},
+		{
+			id: 'phone',
+			label: 'Phone',
+			width: { xs: '14%', sm: '14%' },
+			hideOnMobile: true,
+			sortable: false,
+		},
+		{
+			id: 'treatment',
+			label: 'Treatment',
+			width: { xs: '13%', sm: '13%' },
+		},
+		{
+			id: 'appointmentTime',
+			label: 'Date & Time',
+			width: { xs: '10%', sm: '10%' },
+		},
+		{
+			id: 'notes',
+			label: 'Notes',
+			width: { xs: '17%', sm: '17%' },
+			hideOnMobile: true,
+			sortable: false,
+		},
+		{
+			id: 'status',
+			label: 'Status',
+			width: { xs: '8%', sm: '8%' },
+		},
+		{
+			id: 'actions',
+			label: 'Actions',
+			sortable: false,
+			width: { xs: '5%', sm: '5%' },
+		},
 	];
 
 	// Add clear filters function
@@ -392,30 +443,36 @@ function AppointmentManagement({ appointments, onRefresh }) {
 		tableLayout: 'fixed',
 		'& .MuiTableCell-root': {
 			...enhancedTableStyles.root['& .MuiTableCell-root'],
-			padding: '16px',
+			padding: {
+				xs: '8px 4px',
+				sm: '16px',
+			},
 			height: 'auto',
+			display: 'table-cell',
 			verticalAlign: 'middle',
 			textAlign: 'center',
+			wordBreak: 'break-word',
+			whiteSpace: 'normal',
 		},
-		'& .MuiTableRow-root': {
-			...enhancedTableStyles.root['& .MuiTableRow-root'],
-		},
-		'& .MuiTableHead-root': {
-			'& .MuiTableCell-root': {
-				backgroundColor: (theme) => theme.palette.primary.main,
-				color: 'white',
-				fontWeight: 'bold',
-				whiteSpace: 'nowrap',
-				textAlign: 'center',
+		'& .MuiTableHead-root .MuiTableCell-root': {
+			backgroundColor: (theme) => theme.palette.primary.main,
+			color: 'white',
+			fontWeight: 'bold',
+			fontSize: {
+				xs: '0.75rem',
+				sm: '0.875rem',
 			},
+			display: 'table-cell',
+			verticalAlign: 'middle',
+			textAlign: 'center',
 		},
 	};
 
 	return (
 		<Box sx={{ width: '100%', overflow: 'hidden' }}>
 			{/* Search and Filter Section */}
-			<Grid container spacing={2} sx={{ mt: 1, mb: 2 }}>
-				<Grid item xs={12} md={6}>
+			<Grid container spacing={2} sx={{ mb: 3 }}>
+				<Grid item xs={12} md={4}>
 					<TextField
 						fullWidth
 						variant="outlined"
@@ -432,7 +489,7 @@ function AppointmentManagement({ appointments, onRefresh }) {
 					/>
 				</Grid>
 				{/* Treatment Filter */}
-				<Grid item xs={12} md={3}>
+				<Grid item xs={12} md={4}>
 					<FormControl fullWidth>
 						<InputLabel>Treatment</InputLabel>
 						<Select
@@ -449,7 +506,7 @@ function AppointmentManagement({ appointments, onRefresh }) {
 					</FormControl>
 				</Grid>
 				{/* Status Filter */}
-				<Grid item xs={12} md={3}>
+				<Grid item xs={12} md={4}>
 					<FormControl fullWidth>
 						<InputLabel>Status</InputLabel>
 						<Select
@@ -473,9 +530,11 @@ function AppointmentManagement({ appointments, onRefresh }) {
 			<Box
 				sx={{
 					display: 'flex',
+					flexDirection: { xs: 'column', sm: 'row' },
 					justifyContent: 'space-between',
-					alignItems: 'center',
-					mb: 2, // Reduced margin bottom
+					alignItems: { xs: 'flex-start', sm: 'center' },
+					gap: 2,
+					mb: 2,
 				}}
 			>
 				{/* Active Filter Chips */}
@@ -527,29 +586,55 @@ function AppointmentManagement({ appointments, onRefresh }) {
 				)}
 			</Box>
 
-			{/* Updated Table Container */}
 			<TableContainer
 				component={Paper}
 				sx={{
 					...enhancedTableStyles.tableContainer,
-					width: '100%',
-					overflowX: 'hidden',
-					overflowY: 'hidden', // Prevent vertical scroll
-					'& .MuiTable-root': {
-						tableLayout: 'fixed',
-					},
+					...mobileResponsiveStyles.tableContainer,
+					marginBottom: 2,
+					overflowX: 'auto',
 				}}
 			>
-				<Table sx={mergedTableStyles} stickyHeader>
+				<Table
+					sx={{
+						...mergedTableStyles,
+						tableLayout: 'fixed',
+						'& .MuiTableCell-root': {
+							whiteSpace: 'normal',
+							overflow: 'hidden',
+							textOverflow: 'ellipsis',
+							padding: { xs: '8px 4px', sm: '16px' },
+							textAlign: 'center',
+							verticalAlign: 'middle',
+						},
+					}}
+				>
 					<TableHead>
 						<TableRow>
 							{headCells.map((headCell) => (
 								<TableCell
 									key={headCell.id}
 									width={headCell.width}
+									className={headCell.hideOnMobile ? 'hide-on-mobile' : ''}
 									sx={{
-										whiteSpace: 'nowrap',
+										whiteSpace: 'normal',
+										wordBreak: 'break-word',
 										textAlign: 'center',
+										minHeight: '60px',
+										padding: {
+											xs: '8px 4px',
+											sm: '16px',
+										},
+										fontSize: {
+											xs: '0.75rem',
+											sm: '0.875rem',
+										},
+										verticalAlign: 'middle',
+										// Ensure headers are hidden in mobile view
+										display: {
+											xs: headCell.hideOnMobile ? 'none' : 'table-cell',
+											sm: 'table-cell',
+										},
 									}}
 								>
 									{headCell.sortable !== false ? (
@@ -585,37 +670,58 @@ function AppointmentManagement({ appointments, onRefresh }) {
 								<TableCell
 									sx={{
 										wordBreak: 'break-word',
-										minHeight: '60px',
+										whiteSpace: 'normal',
+										width: { xs: '120px', sm: '200px' },
+										maxWidth: { xs: '120px', sm: '200px' },
+										minWidth: { xs: '120px', sm: '200px' },
+										overflow: 'hidden',
+										textAlign: 'center',
 										verticalAlign: 'middle',
 										display: 'table-cell',
-										textAlign: 'center',
+										p: 1,
 									}}
 								>
 									{appointment.patientName}
 								</TableCell>
 
 								<TableCell
+									className="hide-on-mobile"
 									sx={{
 										wordBreak: 'break-word',
-										minHeight: '60px',
-										verticalAlign: 'middle',
-										display: 'table-cell',
+										whiteSpace: 'normal',
+										width: { xs: '150px', sm: '250px' },
+										maxWidth: { xs: '150px', sm: '250px' },
+										minWidth: { xs: '150px', sm: '250px' },
+										overflow: 'hidden',
 										textAlign: 'center',
+										verticalAlign: 'middle',
+										p: 1,
 									}}
 								>
 									{appointment.email}
 								</TableCell>
 
 								<TableCell
+									className="hide-on-mobile"
 									sx={{
 										whiteSpace: 'nowrap',
-										minHeight: '60px',
+										overflow: 'hidden',
+										textOverflow: 'ellipsis',
+										width: { xs: '80px', sm: '100px' },
+										maxWidth: { xs: '80px', sm: '100px' },
 										verticalAlign: 'middle',
-										display: 'table-cell',
 										textAlign: 'center',
+										padding: '8px',
+										'& span': {
+											display: 'block',
+											overflow: 'hidden',
+											textOverflow: 'ellipsis',
+											whiteSpace: 'nowrap',
+											width: '120%',
+										},
 									}}
 								>
-									{appointment.phone}
+									<span>{appointment.phone}</span>
 								</TableCell>
 
 								<TableCell
@@ -644,7 +750,20 @@ function AppointmentManagement({ appointments, onRefresh }) {
 									{format(new Date(appointment.appointmentTime), 'p')}
 								</TableCell>
 
-								<CollapsibleNotesCell notes={appointment.noteHistory} />
+								<TableCell
+									className="hide-on-mobile"
+									sx={{
+										padding: 0,
+										width: { xs: '15%', sm: '15%' },
+										maxWidth: { xs: '15%', sm: '15%' },
+										minWidth: { xs: '15%', sm: '15%' },
+										verticalAlign: 'top',
+										textAlign: 'left',
+										height: 'auto',
+									}}
+								>
+									<CollapsibleNotesCell notes={appointment.noteHistory} />
+								</TableCell>
 
 								<TableCell
 									sx={{
@@ -652,6 +771,10 @@ function AppointmentManagement({ appointments, onRefresh }) {
 										display: 'table-cell',
 										textAlign: 'center',
 										verticalAlign: 'middle',
+										padding: {
+											xs: '4px',
+											sm: '8px',
+										},
 									}}
 								>
 									<Chip
@@ -661,17 +784,36 @@ function AppointmentManagement({ appointments, onRefresh }) {
 										}
 										color={getStatusColor(appointment.status)}
 										size="small"
-										sx={{ minWidth: '80px' }}
+										sx={{
+											minWidth: {
+												xs: '70px',
+												sm: '80px',
+											},
+											fontSize: {
+												xs: '0.7rem',
+												sm: '0.8125rem',
+											},
+											height: {
+												xs: '24px',
+												sm: '32px',
+											},
+										}}
 									/>
 								</TableCell>
 
 								<TableCell
 									sx={{
 										minHeight: '60px',
-										padding: '8px',
+										padding: {
+											xs: '4px',
+											sm: '8px',
+										},
 										textAlign: 'center',
 										verticalAlign: 'middle',
-										width: '12%',
+										width: {
+											xs: '80px',
+											sm: '12%',
+										},
 									}}
 								>
 									{appointment.status === 'pending' && (
@@ -679,13 +821,25 @@ function AppointmentManagement({ appointments, onRefresh }) {
 											sx={{
 												display: 'inline-flex',
 												justifyContent: 'center',
-												gap: 1,
+												gap: {
+													xs: 0.5,
+													sm: 1,
+												},
 												'& .MuiIconButton-root': {
-													padding: '4px',
+													padding: {
+														xs: '2px',
+														sm: '4px',
+													},
+												},
+												'& .MuiSvgIcon-root': {
+													fontSize: {
+														xs: '1rem',
+														sm: '1.25rem',
+													},
 												},
 											}}
 										>
-											<Tooltip title="Approve Appointment" arrow>
+											<Tooltip title="Approve" arrow>
 												<IconButton
 													size="small"
 													color="success"
@@ -694,11 +848,11 @@ function AppointmentManagement({ appointments, onRefresh }) {
 														setApproveModalOpen(true);
 													}}
 												>
-													<CheckCircleIcon fontSize="small" />
+													<CheckCircleIcon />
 												</IconButton>
 											</Tooltip>
 
-											<Tooltip title="Reject Appointment" arrow>
+											<Tooltip title="Reject" arrow>
 												<IconButton
 													size="small"
 													color="error"
@@ -707,18 +861,18 @@ function AppointmentManagement({ appointments, onRefresh }) {
 														setRejectModalOpen(true);
 													}}
 												>
-													<BlockIcon fontSize="small" />
+													<BlockIcon />
 												</IconButton>
 											</Tooltip>
 
 											{canCancel && (
-												<Tooltip title="Cancel Appointment" arrow>
+												<Tooltip title="Cancel" arrow>
 													<IconButton
 														size="small"
 														color="warning"
 														onClick={() => handleCancel(appointment)}
 													>
-														<CancelIcon fontSize="small" />
+														<CancelIcon />
 													</IconButton>
 												</Tooltip>
 											)}
@@ -733,7 +887,7 @@ function AppointmentManagement({ appointments, onRefresh }) {
 
 			{/* Update TablePagination styles */}
 			<TablePagination
-				rowsPerPageOptions={[5, 10, 25]}
+				rowsPerPageOptions={[5, 10]}
 				component="div"
 				count={filteredAppointments.length}
 				rowsPerPage={rowsPerPage}
@@ -743,6 +897,26 @@ function AppointmentManagement({ appointments, onRefresh }) {
 				sx={{
 					borderTop: '1px solid rgba(224, 224, 224, 1)',
 					backgroundColor: '#fff',
+					'.MuiTablePagination-toolbar': {
+						minHeight: { xs: '40px', sm: '52px' },
+						paddingLeft: { xs: '8px', sm: '16px' },
+						paddingRight: { xs: '8px', sm: '16px' },
+					},
+					'.MuiTablePagination-selectLabel, .MuiTablePagination-displayedRows':
+						{
+							fontSize: { xs: '0.7rem', sm: '0.875rem' },
+							marginBottom: 0,
+							marginTop: 0,
+						},
+					'.MuiTablePagination-select': {
+						fontSize: { xs: '0.7rem', sm: '0.875rem' },
+					},
+					'.MuiTablePagination-actions': {
+						marginLeft: { xs: '4px', sm: '8px' },
+						'& .MuiIconButton-root': {
+							padding: { xs: '4px', sm: '8px' },
+						},
+					},
 				}}
 			/>
 

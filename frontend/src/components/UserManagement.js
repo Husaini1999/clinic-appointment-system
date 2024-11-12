@@ -24,6 +24,73 @@ import {
 } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
 import { enhancedTableStyles } from './styles/tableStyles';
+import { mobileResponsiveStyles } from './styles/mobileStyles';
+
+const mergedTableStyles = {
+	...enhancedTableStyles.root,
+	width: '100%',
+	tableLayout: 'fixed',
+	'& .MuiTableCell-root': {
+		...enhancedTableStyles.root['& .MuiTableCell-root'],
+		padding: {
+			xs: '8px 4px',
+			sm: '16px',
+		},
+		height: 'auto',
+		display: 'table-cell',
+		verticalAlign: 'middle',
+		textAlign: 'center',
+		wordBreak: 'break-word',
+		whiteSpace: 'normal',
+	},
+	'& .MuiTableHead-root .MuiTableCell-root': {
+		backgroundColor: (theme) => theme.palette.primary.main,
+		color: 'white',
+		fontWeight: 'bold',
+		fontSize: {
+			xs: '0.75rem',
+			sm: '0.875rem',
+		},
+		display: 'table-cell',
+		verticalAlign: 'middle',
+		textAlign: 'center',
+	},
+};
+
+// Add this before the UserManagement function
+const headCells = [
+	{
+		id: 'name',
+		label: 'Name',
+		width: { xs: '120px', sm: '200px' },
+		sortable: true,
+	},
+	{
+		id: 'email',
+		label: 'Email',
+		width: { xs: '150px', sm: '250px' },
+		sortable: true,
+	},
+	{
+		id: 'phone',
+		label: 'Phone',
+		width: { sm: '20%' },
+		hideOnMobile: true,
+		sortable: false,
+	},
+	{
+		id: 'role',
+		label: 'Role',
+		width: { xs: '150px', sm: '15%' },
+		sortable: false,
+	},
+	{
+		id: 'actions',
+		label: 'Actions',
+		width: { xs: '150px', sm: '15%' },
+		sortable: false,
+	},
+];
 
 function UserManagement() {
 	const [users, setUsers] = useState([]);
@@ -183,7 +250,7 @@ function UserManagement() {
 					<TextField
 						fullWidth
 						variant="outlined"
-						laceholder="Search by name or email..."
+						placeholder="Search by name or email..."
 						value={searchTerm}
 						onChange={(e) => setSearchTerm(e.target.value)}
 						InputProps={{
@@ -193,6 +260,11 @@ function UserManagement() {
 								</InputAdornment>
 							),
 						}}
+						sx={{
+							'& .MuiInputBase-root': {
+								fontSize: { xs: '0.875rem', sm: '1rem' },
+							},
+						}}
 					/>
 				</Grid>
 			</Grid>
@@ -201,66 +273,115 @@ function UserManagement() {
 				component={Paper}
 				sx={{
 					...enhancedTableStyles.tableContainer,
-					width: '100%',
-					overflowX: 'hidden',
-					overflowY: 'hidden',
-					'& .MuiTable-root': {
-						tableLayout: 'fixed',
-					},
+					...mobileResponsiveStyles.tableContainer,
+					marginBottom: 2,
+					overflowX: 'auto',
 				}}
 			>
-				<Table sx={enhancedTableStyles.root}>
+				<Table
+					sx={{
+						...mergedTableStyles,
+						tableLayout: 'fixed',
+						'& .MuiTableCell-root': {
+							whiteSpace: 'normal',
+							overflow: 'hidden',
+							textOverflow: 'ellipsis',
+							padding: { xs: '8px 4px', sm: '16px' },
+						},
+					}}
+				>
 					<TableHead>
 						<TableRow>
-							<TableCell width="25%">
-								<TableSortLabel
-									active={orderBy === 'name'}
-									direction={orderBy === 'name' ? order : 'asc'}
-									onClick={() => handleRequestSort('name')}
+							{headCells.map((headCell) => (
+								<TableCell
+									key={headCell.id}
+									className={headCell.hideOnMobile ? 'hide-on-mobile' : ''}
+									width={headCell.width}
 									sx={{
-										color: 'white !important',
-										'& .MuiTableSortLabel-icon': {
-											color: 'white !important',
+										whiteSpace: 'nowrap',
+										textAlign: 'center',
+										minHeight: '60px',
+										padding: {
+											xs: '8px 4px',
+											sm: '16px',
 										},
-										'&.Mui-active': {
-											color: 'white !important',
-											'& .MuiTableSortLabel-icon': {
-												color: 'white !important',
-											},
+										fontSize: {
+											xs: '0.75rem',
+											sm: '0.875rem',
 										},
+										verticalAlign: 'middle',
 									}}
 								>
-									Name
-								</TableSortLabel>
-							</TableCell>
-							<TableCell width="25%">Email</TableCell>
-							<TableCell width="20%">Phone</TableCell>
-							<TableCell
-								width="15%"
-								sx={{
-									textAlign: 'center',
-									verticalAlign: 'middle',
-								}}
-							>
-								Role
-							</TableCell>
-							<TableCell
-								width="15%"
-								sx={{
-									textAlign: 'center',
-									verticalAlign: 'middle',
-								}}
-							>
-								Actions
-							</TableCell>
+									{headCell.sortable ? (
+										<TableSortLabel
+											active={orderBy === headCell.id}
+											direction={orderBy === headCell.id ? order : 'asc'}
+											onClick={() => handleRequestSort(headCell.id)}
+											sx={{
+												color: 'white !important',
+												'& .MuiTableSortLabel-icon': {
+													color: 'white !important',
+												},
+												'&.Mui-active': {
+													color: 'white !important',
+												},
+											}}
+										>
+											{headCell.label}
+										</TableSortLabel>
+									) : (
+										headCell.label
+									)}
+								</TableCell>
+							))}
 						</TableRow>
 					</TableHead>
 					<TableBody>
 						{paginatedUsers.map((user) => (
 							<TableRow key={user._id}>
-								<TableCell>{user.name}</TableCell>
-								<TableCell>{user.email}</TableCell>
-								<TableCell>{user.phone}</TableCell>
+								<TableCell
+									sx={{
+										wordBreak: 'break-word',
+										whiteSpace: 'normal',
+										width: { xs: '120px', sm: '200px' },
+										maxWidth: { xs: '120px', sm: '200px' },
+										minWidth: { xs: '120px', sm: '200px' },
+										overflow: 'hidden',
+										textAlign: 'center',
+										verticalAlign: 'middle',
+										p: 1,
+									}}
+								>
+									{user.name}
+								</TableCell>
+								<TableCell
+									sx={{
+										wordBreak: 'break-word',
+										whiteSpace: 'normal',
+										width: { xs: '150px', sm: '250px' },
+										maxWidth: { xs: '150px', sm: '250px' },
+										minWidth: { xs: '150px', sm: '250px' },
+										overflow: 'hidden',
+										textAlign: 'center',
+										verticalAlign: 'middle',
+										p: 1,
+									}}
+								>
+									{user.email}
+								</TableCell>
+								<TableCell
+									className="hide-on-mobile"
+									sx={{
+										textAlign: 'center',
+										verticalAlign: 'middle',
+										display: {
+											xs: 'none',
+											sm: 'table-cell',
+										},
+									}}
+								>
+									{user.phone}
+								</TableCell>
 								<TableCell
 									sx={{ textAlign: 'center', verticalAlign: 'middle' }}
 								>
@@ -290,8 +411,9 @@ function UserManagement() {
 													boxShadow: 4,
 												},
 												padding: '2px 8px',
-												fontSize: '1rem',
+												fontSize: { xs: '0.8rem', sm: '1rem' },
 												minWidth: 'auto',
+												whiteSpace: 'nowrap',
 											}}
 										>
 											Change Role
@@ -302,25 +424,57 @@ function UserManagement() {
 						))}
 					</TableBody>
 				</Table>
-				<TablePagination
-					rowsPerPageOptions={[5, 10, 25]}
-					component="div"
-					count={sortedAndFilteredUsers.length}
-					rowsPerPage={rowsPerPage}
-					page={page}
-					onPageChange={handleChangePage}
-					onRowsPerPageChange={handleChangeRowsPerPage}
-					sx={{
-						borderTop: '1px solid rgba(224, 224, 224, 1)',
-						backgroundColor: '#fff',
-					}}
-				/>
 			</TableContainer>
 
+			<TablePagination
+				rowsPerPageOptions={[5, 10]}
+				component="div"
+				count={sortedAndFilteredUsers.length}
+				rowsPerPage={rowsPerPage}
+				page={page}
+				onPageChange={handleChangePage}
+				onRowsPerPageChange={handleChangeRowsPerPage}
+				sx={{
+					borderTop: '1px solid rgba(224, 224, 224, 1)',
+					backgroundColor: '#fff',
+					'.MuiTablePagination-toolbar': {
+						minHeight: { xs: '40px', sm: '52px' },
+						paddingLeft: { xs: '8px', sm: '16px' },
+						paddingRight: { xs: '8px', sm: '16px' },
+					},
+					'.MuiTablePagination-selectLabel, .MuiTablePagination-displayedRows':
+						{
+							fontSize: { xs: '0.7rem', sm: '0.875rem' },
+							marginBottom: 0,
+							marginTop: 0,
+						},
+					'.MuiTablePagination-select': {
+						fontSize: { xs: '0.7rem', sm: '0.875rem' },
+					},
+					'.MuiTablePagination-actions': {
+						marginLeft: { xs: '4px', sm: '8px' },
+						'& .MuiIconButton-root': {
+							padding: { xs: '4px', sm: '8px' },
+						},
+					},
+				}}
+			/>
+
 			{/* Update Role Change Modal */}
-			<Dialog open={open} onClose={() => setOpen(false)}>
+			<Dialog
+				open={open}
+				onClose={() => setOpen(false)}
+				fullWidth
+				maxWidth="xs"
+				sx={{
+					'& .MuiDialog-paper': {
+						width: { xs: '95%', sm: 'auto' },
+						m: { xs: 2, sm: 'auto' },
+					},
+				}}
+			>
 				<DialogTitle>Change User Role</DialogTitle>
-				<DialogContent sx={{ minWidth: 300, mt: 2 }}>
+				<DialogContent sx={{ minWidth: { xs: 'auto', sm: 300 }, mt: 2 }}>
 					<Typography variant="body2" sx={{ mb: 2 }}>
 						Select new role for user: {selectedUser?.name}
 					</Typography>

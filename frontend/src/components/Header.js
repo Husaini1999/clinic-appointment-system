@@ -6,10 +6,19 @@ import {
 	Typography,
 	useScrollTrigger,
 	Slide,
+	IconButton,
+	Box,
+	useTheme,
+	useMediaQuery,
 } from '@mui/material';
+import MenuIcon from '@mui/icons-material/Menu';
 import Navbar from './Navbar';
 
 const Header = () => {
+	const theme = useTheme();
+	const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+	const [mobileOpen, setMobileOpen] = React.useState(false);
+
 	function HideOnScroll({ children }) {
 		const trigger = useScrollTrigger();
 		return (
@@ -18,6 +27,11 @@ const Header = () => {
 			</Slide>
 		);
 	}
+
+	const handleDrawerToggle = () => {
+		setMobileOpen((prevState) => !prevState);
+	};
+
 	return (
 		<HideOnScroll>
 			<AppBar
@@ -36,8 +50,21 @@ const Header = () => {
 							height: 70,
 							display: 'flex',
 							justifyContent: 'space-between',
+							alignItems: 'center',
 						}}
 					>
+						{isMobile && (
+							<IconButton
+								color="primary"
+								aria-label="open drawer"
+								edge="start"
+								onClick={handleDrawerToggle}
+								sx={{ mr: 2 }}
+							>
+								<MenuIcon />
+							</IconButton>
+						)}
+
 						<Typography
 							variant="h6"
 							component="div"
@@ -45,13 +72,29 @@ const Header = () => {
 								cursor: 'pointer',
 								color: 'primary.main',
 								fontWeight: 700,
-								fontSize: '1.5rem',
+								fontSize: { xs: '1.2rem', sm: '1.5rem' },
 								letterSpacing: '-0.5px',
+								position: { xs: 'absolute', md: 'static' },
+								left: '50%',
+								transform: { xs: 'translateX(-50%)', md: 'none' },
 							}}
 						>
 							Primer Cherang Clinic
 						</Typography>
-						<Navbar />
+
+						<Box sx={{ display: { xs: 'none', md: 'block' } }}>
+							<Navbar
+								mobileOpen={mobileOpen}
+								onMobileClose={handleDrawerToggle}
+							/>
+						</Box>
+
+						{isMobile && (
+							<Navbar
+								mobileOpen={mobileOpen}
+								onMobileClose={handleDrawerToggle}
+							/>
+						)}
 					</Toolbar>
 				</Container>
 			</AppBar>
