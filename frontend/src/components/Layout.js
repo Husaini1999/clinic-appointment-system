@@ -1,5 +1,6 @@
 import React from 'react';
 import Header from './Header';
+import Chatbot from './Chatbot';
 
 const Layout = ({ children }) => {
 	return (
@@ -10,6 +11,7 @@ const Layout = ({ children }) => {
 				{/* Adjust margin based on your header height */}
 				{children}
 			</main>
+			<Chatbot />
 		</div>
 	);
 };
