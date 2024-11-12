@@ -14,7 +14,7 @@
 		"openai": "^4.71.1"
 	},
 	"scripts": {
-		"start": "nodemon server.js",
+		"start": "node server.js",
 		"dev": "nodemon server.js"
 	},
 	"devDependencies": {
